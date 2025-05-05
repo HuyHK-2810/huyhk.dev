@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.swiper-pagination {
+  position: absolute;
+  bottom: -5px !important;
+  /* Đưa pagination xuống dưới */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.swiper-container {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+}
