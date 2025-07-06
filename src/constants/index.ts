@@ -6,6 +6,11 @@ export const routes = [
         href: "/projects",
         icon: HiMenu
     },
+    {
+        title: "pricing",
+        href: "/pricing",
+        icon: HiMenu
+    },
     // {
     //     title: "blog",
     //     href: "/blog",
