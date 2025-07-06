@@ -30,14 +30,14 @@ export function QuickView({ href, children }: QuickViewProps) {
     <>
       <span className={clsx('hidden items-center gap-2', 'xl:inline-flex')}>
         {/* only show for large devices */}
-        <Link href={href} className={clsx('link')}>
+        <Link href={href} className={clsx('link cursor-pointer')}>
           {children}
         </Link>
         <button
           type="button"
           onClick={() => handleQuickView()}
           className={clsx(
-            'bg-accent-600/[0.08] text-accent-600 inline-flex h-6 items-center gap-1 rounded-full px-2 text-[13px] font-medium',
+            'bg-accent-600/[0.08] text-accent-600 inline-flex h-6 items-center gap-1 rounded-full px-2 text-[13px] font-medium cursor-pointer',
             'dark:text-accent-400 dark:dark:bg-accent-400/10 dark:font-normal'
           )}
         >
@@ -47,7 +47,7 @@ export function QuickView({ href, children }: QuickViewProps) {
       </span>
 
       {/* show basic link on small devices */}
-      <Link href={href} className={clsx('link', 'xl:hidden')}>
+      <Link href={href} className={clsx('link cursor-pointer', 'xl:hidden')}>
         {children}
       </Link>
     </>

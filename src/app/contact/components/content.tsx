@@ -71,7 +71,7 @@ const Content = ({ }) => {
                                             "after:px-6 after:bg-accent-600/20 after:absolute bottom-1 after:left-0 after:right-0 z-[1] after:h-2 after:origin-bottom after:scale-y-[.4] hover:after:scale-y-[2] after:transition-transform after:content-[''] dark:text-slate-200"
                                         )}>
                                             <MailCheck size={20} />
-                                            <a className='text-sm' href="mailto:hokhachuy.dev@gmail.com">
+                                            <a className='text-sm cursor-pointer hover:underline' href="mailto:hokhachuy.dev@gmail.com">
                                                 hokhachuy.dev@gmail.com
                                             </a>
                                         </td>

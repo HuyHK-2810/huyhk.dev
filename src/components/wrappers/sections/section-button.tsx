@@ -36,12 +36,12 @@ export const SectionButton = ({
 
             initial={animation.hide}
             whileInView={animation.show}
-            transition={{ duration: 0.3  }}
+            transition={{ duration: 0.3 }}
             viewport={{ once: true }}
-            
+
             type="button"
             className={clsx(
-                'flex flex-1 items-center gap-4 rounded-2xl border-2 bg-white px-4 py-4 text-left w-full',
+                'flex flex-1 items-center gap-4 rounded-2xl border-2 bg-white px-4 py-4 text-left w-full cursor-pointer',
                 'dark:bg-slate-900',
                 active
                     ? ['border-accent-400', 'dark:border-accent-400']
@@ -97,7 +97,7 @@ export function SectionButtonSmall({
     return (
         <button
             type="button"
-            className={clsx('flex flex-col items-center rounded-xl p-2 text-sm', [
+            className={clsx('flex flex-col items-center rounded-xl p-2 text-sm cursor-pointer', [
                 active
                     ? ['text-accent-600', 'dark:text-accent-400']
                     : ['text-slate-400', 'dark:text-slate-600'],

@@ -48,7 +48,7 @@ const HeroTitle = () => {
                     }}
                 >
                     <Image
-                        onLoadingComplete={() => {
+                        onLoad={() => {
                             controls.start({
                                 opacity: 1,
                                 y: 0,

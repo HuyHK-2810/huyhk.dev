@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://huyhk.dev/sitemap.xml 

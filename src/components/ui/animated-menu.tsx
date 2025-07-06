@@ -25,7 +25,7 @@ export const AnimatedMenu = ({ routes }: { routes: any }) => {
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setIsOpen(!isOpen)}
                 className={clsx(
-                    'ml-1 flex h-9 w-9 items-center justify-center gap-2 rounded-xl bg-slate-300/50 text-slate-800',
+                    'ml-1 flex h-9 w-9 items-center justify-center gap-2 rounded-xl bg-slate-300/50 text-slate-800 cursor-pointer',
                     'xl:w-auto xl:px-3',
                     'hover:bg-slate-300/70 sm:ml-0',
                     'dark:bg-slate-800/50 dark:text-slate-100 dark:hover:bg-slate-700/50'

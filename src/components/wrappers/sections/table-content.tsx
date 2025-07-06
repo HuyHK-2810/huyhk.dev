@@ -27,7 +27,7 @@ function TableOfContentsLink({
 }: TableOfContentsLinkProps) {
   return (
     <button onClick={() => scroll.scrollTo(depth, options)}
-      className={clsx('hover:text-[#de005a] relative z-10 flex p-1 px-2 text-[13px] font-bold text-slate-700', 'dark:hover:text-[#ff98d6] dark:font-semibold dark:text-slate-300', {
+      className={clsx('hover:text-[#de005a] relative z-10 flex p-1 px-2 text-[13px] font-bold text-slate-700 cursor-pointer', 'dark:hover:text-[#ff98d6] dark:font-semibold dark:text-slate-300', {
         'ml-4 font-normal text-slate-600 dark:font-normal dark:text-slate-400': depth === 2,
         'text-accent-600 hover:text-accent-700 dark:text-accent-400 dark:hover:text-accent-300': active,
       })}

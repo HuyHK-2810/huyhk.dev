@@ -38,7 +38,8 @@ export default function Image({
           className
         )}
         {...props}
-        onLoadingComplete={(img) => {
+        onLoad={(e) => {
+          const img = e.target as HTMLImageElement;
           setImage(img.currentSrc);
         }}
       />

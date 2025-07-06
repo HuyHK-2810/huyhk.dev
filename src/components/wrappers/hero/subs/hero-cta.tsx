@@ -39,7 +39,7 @@ const HeroCta = () => {
                 transition={{ delay: 0.5 }}
             >
                 <Button variant="primary_tranparent">
-                    <Link href="/" className='inline-flex gap-1 text-xl items-center'>
+                    <Link href="/HuyHK%20Fullstack%20Developer.pdf" target="_blank" rel="noopener noreferrer" className='inline-flex gap-1 text-xl items-center cursor-pointer'>
                         <FileText className="mr-2 h-6 w-6" />
                         <span>
                             resume

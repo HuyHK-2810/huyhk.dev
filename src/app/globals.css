@@ -3,6 +3,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global cursor pointer for interactive elements */
+a,
+button,
+[role="button"],
+.cursor-pointer {
+  cursor: pointer;
+}
+
+/* Ensure links have proper cursor */
+.link {
+  cursor: pointer;
+}
+
 .swiper-pagination {
   position: absolute;
   bottom: -5px !important;
