@@ -1,68 +1,286 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* Global cursor pointer for interactive elements */
-a,
-button,
-[role="button"],
-.cursor-pointer {
-  cursor: pointer;
+/* =============================================
+   Design Tokens
+   ============================================= */
+:root {
+  --bg-primary: #080B14;
+  --bg-secondary: #0a0e1a;
+  --bg-tertiary: #0d1117;
+
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-bg-hover: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.14);
+
+  --glow-primary: rgba(99, 102, 241, 0.3);
+  --glow-secondary: rgba(59, 130, 246, 0.2);
+  --glow-accent: rgba(139, 92, 246, 0.25);
+
+  --text-primary: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.6);
+  --text-muted: rgba(255, 255, 255, 0.35);
+
+  --gradient-primary: linear-gradient(135deg, #6366f1, #3b82f6);
+  --gradient-accent: linear-gradient(135deg, #8b5cf6, #6366f1);
+  --gradient-text: linear-gradient(135deg, #a5b4fc, #93c5fd);
 }
 
-/* Ensure links have proper cursor */
-.link {
-  cursor: pointer;
+/* =============================================
+   Base Reset & Typography
+   ============================================= */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
-.swiper-pagination {
+html {
+  scroll-behavior: smooth;
+  cursor: none;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Hide default cursor on interactive elements */
+a, button, [role="button"], input, textarea, select, label {
+  cursor: none;
+}
+
+/* Selection */
+::selection {
+  background: rgba(99, 102, 241, 0.3);
+  color: #e0e7ff;
+}
+
+/* =============================================
+   Glassmorphism Utilities
+   ============================================= */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-hover {
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-hover:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.1);
+}
+
+/* =============================================
+   Gradient Text
+   ============================================= */
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* =============================================
+   Glow Effects
+   ============================================= */
+.glow-primary {
+  box-shadow: 0 0 40px var(--glow-primary);
+}
+
+.glow-sm {
+  box-shadow: 0 0 20px var(--glow-primary);
+}
+
+/* =============================================
+   Background Patterns
+   ============================================= */
+.bg-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* =============================================
+   Gradient Orbs (ambient background)
+   ============================================= */
+.orb {
   position: absolute;
-  bottom: -5px !important;
-  /* Đưa pagination xuống dưới */
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.15;
 }
 
-.swiper-container {
-  position: relative;
-  width: 100%;
-  margin: 0 auto;
+.orb-indigo {
+  background: radial-gradient(circle, #6366f1, transparent 70%);
 }
 
-/* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
+.orb-blue {
+  background: radial-gradient(circle, #3b82f6, transparent 70%);
 }
 
-.scrollbar-thumb-slate-300 {
-  scrollbar-color: #cbd5e1 transparent;
+.orb-violet {
+  background: radial-gradient(circle, #8b5cf6, transparent 70%);
 }
 
-.dark .scrollbar-thumb-slate-600 {
-  scrollbar-color: #475569 transparent;
-}
-
-.scrollbar-track-transparent {
-  scrollbar-color: transparent transparent;
-}
-
-/* WebKit scrollbar styles */
-.scrollbar-thin::-webkit-scrollbar {
+/* =============================================
+   Custom Scrollbar
+   ============================================= */
+::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
   border-radius: 3px;
 }
 
-.dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #475569;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+/* =============================================
+   Skill Bar
+   ============================================= */
+.skill-bar-track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--gradient-primary);
+  transform-origin: left;
+  transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* =============================================
+   Animated border gradient
+   ============================================= */
+.border-gradient {
+  position: relative;
+  border: none;
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(59,130,246,0.2), rgba(139,92,246,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* =============================================
+   Section fade-in on scroll
+   ============================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =============================================
+   Focus styles
+   ============================================= */
+:focus-visible {
+  outline: 2px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* =============================================
+   Prose / Blog
+   ============================================= */
+.prose-dark {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.8;
+}
+
+.prose-dark h2 {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-dark h3 {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-dark p {
+  margin-bottom: 1rem;
+}
+
+.prose-dark code {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.875em;
+}
+
+/* =============================================
+   Tag / Badge
+   ============================================= */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(99, 102, 241, 0.12);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
