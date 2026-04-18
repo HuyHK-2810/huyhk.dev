@@ -16,10 +16,10 @@ export default function Footer() {
               </div>
               <span className="font-semibold text-white/90">HuyHK</span>
             </div>
-            <p className="text-sm text-white/40 leading-relaxed max-w-xs">
-              Fullstack Developer building seamless, optimized, and scalable web experiences.
+            <p className="text-sm text-white/55 leading-relaxed max-w-xs">
+              Fullstack Developer — xây dựng sản phẩm web nhanh, ổn định và dễ bảo trì.
             </p>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span className="text-xs text-emerald-400">{contactInfo.availability}</span>
             </div>
@@ -27,13 +27,13 @@ export default function Footer() {
 
           {/* Navigation */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider">Navigation</h3>
-            <nav className="flex flex-col gap-2">
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Trang</h3>
+            <nav className="flex flex-col gap-2.5">
               {routes.map((route) => (
                 <Link
                   key={route.href}
                   href={route.href}
-                  className="text-sm text-white/40 hover:text-white/80 transition-colors duration-200"
+                  className="text-sm text-white/55 hover:text-white transition-colors duration-200"
                 >
                   {route.title}
                 </Link>
@@ -43,24 +43,24 @@ export default function Footer() {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider">Contact</h3>
-            <div className="space-y-2">
+            <h3 className="text-xs font-semibold text-white/50 uppercase tracking-wider">Liên hệ</h3>
+            <div className="space-y-2.5">
               <a
                 href={`mailto:${contactInfo.email}`}
-                className="block text-sm text-white/40 hover:text-indigo-300 transition-colors duration-200"
+                className="block text-sm text-white/55 hover:text-indigo-300 transition-colors duration-200"
               >
                 {contactInfo.email}
               </a>
-              <p className="text-sm text-white/40">{contactInfo.location}</p>
+              <p className="text-sm text-white/45">{contactInfo.location}</p>
             </div>
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               {socials.map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-white/30 hover:text-white/70 transition-colors duration-200 underline underline-offset-2"
+                  className="text-xs text-white/45 hover:text-white transition-colors duration-200 glass glass-hover px-3 py-1.5 rounded-lg"
                 >
                   {social.name}
                 </a>
@@ -70,12 +70,11 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/25">
-            © {year} HuyHK. Built with Next.js 15 & React 19.
+          <p className="text-xs text-white/35">
+            © {year} HuyHK. Built with Next.js 16 & React 19.
           </p>
-          <p className="text-xs text-white/25">
-            Designed & developed with{" "}
-            <span className="text-indigo-400/60">♥</span>
+          <p className="text-xs text-white/35">
+            Designed & developed with <span className="text-indigo-400/70">♥</span> in Sài Gòn
           </p>
         </div>
       </div>
