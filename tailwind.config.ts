@@ -1,11 +1,6 @@
 import type { Config } from "tailwindcss"
 import colors from 'tailwindcss/colors'
 
-const svgToDataUri = require("mini-svg-data-uri");
-
-const {
-    default: flattenColorPalette,
-} = require("tailwindcss/lib/util/flattenColorPalette");
 const config = {
     darkMode: ["class", "html"],
     content: [
@@ -16,12 +11,10 @@ const config = {
         container: {
             center: true,
             padding: {
-                DEFAULT: '2rem',
-                'xs': '0rem',
-                'sm': '0rem',
-                'md': '0rem',
-                'lg': '0rem',
-                'xl': '4rem',
+                DEFAULT: '1.5rem',
+                sm: '1.5rem',
+                lg: '2rem',
+                xl: '4rem',
                 '2xl': '4rem',
             },
             screens: {
@@ -29,130 +22,122 @@ const config = {
             },
         },
         extend: {
-
             colors: {
-
                 slate: colors.slate,
                 gray: colors.gray,
-                green: colors.green,
                 transparent: "transparent",
-                dark: "#0c1222",
 
-                // rose
                 primary: {
-                    '50': '#fff0f8',
-                    '100': '#ffe3f4',
-                    '200': '#ffc6ea',
-                    '300': '#ff98d6',
-                    '400': '#ff59b9',
-                    '500': '#ff289b',
-                    '600': '#fe0a79',
-                    '700': '#de005a',
-                    '800': '#b7004a',
-                    '900': '#980341',
-                    '950': '#5e0022',
+                    '50': '#eef2ff',
+                    '100': '#e0e7ff',
+                    '200': '#c7d2fe',
+                    '300': '#a5b4fc',
+                    '400': '#818cf8',
+                    '500': '#6366f1',
+                    '600': '#4f46e5',
+                    '700': '#4338ca',
+                    '800': '#3730a3',
+                    '900': '#312e81',
+                    '950': '#1e1b4b',
                 },
 
-                // paarl
                 secondary: {
-                    '50': '#fcf7f0',
-                    '100': '#f9ecdb',
-                    '200': '#f2d6b6',
-                    '300': '#eab987',
-                    '400': '#e09457',
-                    '500': '#d97836',
-                    '600': '#ca612c',
-                    '700': '#ad4d27',
-                    '800': '#873d25',
-                    '900': '#6d3321',
-                    '950': '#3a1910',
+                    '50': '#eff6ff',
+                    '100': '#dbeafe',
+                    '200': '#bfdbfe',
+                    '300': '#93c5fd',
+                    '400': '#60a5fa',
+                    '500': '#3b82f6',
+                    '600': '#2563eb',
+                    '700': '#1d4ed8',
+                    '800': '#1e40af',
+                    '900': '#1e3a8a',
+                    '950': '#172554',
+                },
+
+                accent: {
+                    '50': '#f5f3ff',
+                    '100': '#ede9fe',
+                    '200': '#ddd6fe',
+                    '300': '#c4b5fd',
+                    '400': '#a78bfa',
+                    '500': '#8b5cf6',
+                    '600': '#7c3aed',
+                    '700': '#6d28d9',
+                    '800': '#5b21b6',
+                    '900': '#4c1d95',
+                },
+
+                dark: {
+                    DEFAULT: '#080B14',
+                    '50': '#0d1117',
+                    '100': '#0a0e1a',
+                    '200': '#080B14',
+                    '300': '#060810',
                 },
 
                 divider: {
                     light: colors.slate[200],
-                    dark: colors.slate[800],
+                    dark: 'rgba(255,255,255,0.08)',
                 },
             },
 
-            letterSpacing: {
-                tightest: '-.075em',
-                tighter: '-.05em',
-                tight: '-.025em',
-                normal: '0',
-                wide: '.10em',
-                wider: '.50em',
-                widest: '1.20em',
+            backgroundImage: {
+                'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                'gradient-indigo': 'linear-gradient(135deg, #6366f1, #3b82f6)',
+                'gradient-violet': 'linear-gradient(135deg, #8b5cf6, #6366f1)',
             },
 
             fontSize: {
-                sm: '0.8rem',
+                xs: '0.75rem',
+                sm: '0.875rem',
                 base: '1rem',
+                lg: '1.125rem',
                 xl: '1.25rem',
                 '2xl': '1.563rem',
                 '3xl': '1.953rem',
                 '4xl': '2.441rem',
                 '5xl': '3.052rem',
-                '6xl': '4.052rem',
-                '7xl': '5.052rem',
+                '6xl': '3.75rem',
+                '7xl': '4.5rem',
+                '8xl': '6rem',
             },
 
             keyframes: {
-                "moov-down": {
-                    from: { transform: "translateY(-100px)", },
-                    to: { transform: "translateY(0)", },
+                "fade-up": {
+                    from: { opacity: '0', transform: "translateY(24px)" },
+                    to: { opacity: '1', transform: "translateY(0)" },
                 },
-                "moov-up": {
-                    from: { transform: "translateY(0)", },
-                    to: { transform: "translateY(-100px)", },
+                "fade-in": {
+                    from: { opacity: '0' },
+                    to: { opacity: '1' },
+                },
+                "glow-pulse": {
+                    '0%, 100%': { opacity: '0.4' },
+                    '50%': { opacity: '0.8' },
+                },
+                "float": {
+                    '0%, 100%': { transform: 'translateY(0px)' },
+                    '50%': { transform: 'translateY(-8px)' },
                 },
             },
             animation: {
-                "moov-down": "moov-down 1s ease-in",
-                "moov-up": "moov-down 1s ease-in",
+                "fade-up": "fade-up 0.6s ease-out",
+                "fade-in": "fade-in 0.4s ease-out",
+                "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+                "float": "float 6s ease-in-out infinite",
+            },
+
+            boxShadow: {
+                'glow-sm': '0 0 20px rgba(99,102,241,0.2)',
+                'glow': '0 0 40px rgba(99,102,241,0.3)',
+                'glow-lg': '0 0 80px rgba(99,102,241,0.4)',
+                'glass': '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+                'glass-lg': '0 16px 64px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
             },
         },
-
     },
-    plugins: [require("tailwindcss-animate"),
-    require('tailwindcss-accent')({
-        colors: ['violet', 'blue', 'red'],
-        root: 'red',
-    }),
-        addVariablesForColors,
-    function ({ matchUtilities, theme }: any) {
-        matchUtilities(
-            {
-                "bg-grid": (value: any) => ({
-                    backgroundImage: `url("${svgToDataUri(
-                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
-                    )}")`,
-                }),
-                "bg-grid-small": (value: any) => ({
-                    backgroundImage: `url("${svgToDataUri(
-                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="8" height="8" fill="none" stroke="${value}"><path d="M0 .5H31.5V32"/></svg>`
-                    )}")`,
-                }),
-                "bg-dot": (value: any) => ({
-                    backgroundImage: `url("${svgToDataUri(
-                        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="16" height="16" fill="none"><circle fill="${value}" id="pattern-circle" cx="10" cy="10" r="1.6257413380501518"></circle></svg>`
-                    )}")`,
-                }),
-            },
-            { values: flattenColorPalette(theme("backgroundColor")), type: "color" }
-        );
-    },
-    ],
+    plugins: [require("tailwindcss-animate")],
 } satisfies Config
 
 export default config
-
-function addVariablesForColors({ addBase, theme }: any) {
-    let allColors = flattenColorPalette(theme("colors"));
-    let newVars = Object.fromEntries(
-        Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
-    );
-
-    addBase({
-        ":root": newVars,
-    });
-}

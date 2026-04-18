@@ -390,7 +390,7 @@ const XNKMinhPhucPricingContent = () => {
     return (
         <section className="relative overflow-hidden">
             {/* Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 dark:from-slate-900 dark:via-blue-900/20 dark:to-purple-900/20"></div>
+            <div className="absolute inset-0 bg-dark"></div>
             <div className="absolute inset-0 opacity-40" style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
             }}></div>
@@ -400,11 +400,11 @@ const XNKMinhPhucPricingContent = () => {
 
                     {/* Enhanced Header */}
                     <div className="text-center max-w-4xl mx-auto">
-                        <h1 className="font-bold text-5xl mb-6 bg-gradient-to-r from-slate-900 via-blue-800 to-purple-800 bg-clip-text text-transparent dark:from-white dark:via-blue-200 dark:to-purple-200 lg:text-6xl">
+                        <h1 className="font-bold text-5xl mb-6 bg-gradient-to-r from-white via-blue-200 to-purple-200 bg-clip-text text-transparent lg:text-6xl">
                             Báo Giá Đặc Biệt - XNK Minh Phúc
                         </h1>
 
-                        <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 leading-relaxed">
+                        <p className="text-xl text-white/65 mb-8 leading-relaxed">
                             Giảm giá 25% cho tất cả gói website cơ khí. Chuyên nghiệp, hiện đại,
                             tối ưu cho ngành công nghiệp và thiết bị cơ khí.
                         </p>
@@ -421,9 +421,8 @@ const XNKMinhPhucPricingContent = () => {
                             <div key={pkg.id} className={clsx(
                                 'group relative rounded-3xl p-8 transition-all duration-500 cursor-pointer',
                                 'hover:scale-105 hover:shadow-2xl',
-                                'bg-white/80 backdrop-blur-sm border border-white/20 shadow-xl',
-                                'dark:bg-slate-900/80 dark:border-slate-700/20',
-                                pkg.popular && 'ring-2 ring-purple-500 ring-offset-4 ring-offset-transparent'
+                                'glass border border-white/8 shadow-glass',
+                                pkg.popular && 'ring-1 ring-indigo-500/50'
                             )}>
                                 {pkg.popular && (
                                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
@@ -442,7 +441,7 @@ const XNKMinhPhucPricingContent = () => {
                                         {pkg.icon}
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                                        <h3 className="text-xl font-bold text-white/90">
                                             {pkg.name}
                                         </h3>
                                     </div>
@@ -452,12 +451,12 @@ const XNKMinhPhucPricingContent = () => {
                                 <div className="mb-6">
                                     <div className="flex items-center gap-2 mb-3">
                                         {pkg.originalPrice && (
-                                            <span className="text-lg text-slate-400 line-through">
+                                            <span className="text-lg text-white/35 line-through">
                                                 {pkg.originalPrice}
                                             </span>
                                         )}
                                         {pkg.originalPrice && (
-                                            <div className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-bold">
+                                            <div className="px-3 py-1 bg-red-500/15 text-red-400 border border-red-500/20 rounded-full text-sm font-bold">
                                                 Giảm giá
                                             </div>
                                         )}
@@ -469,14 +468,14 @@ const XNKMinhPhucPricingContent = () => {
                                         )}>
                                             {pkg.price}
                                         </span>
-                                        <span className="text-slate-500 dark:text-slate-400">
+                                        <span className="text-white/50">
                                             {pkg.period}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Description */}
-                                <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                                <p className="text-white/65 mb-6 leading-relaxed">
                                     {pkg.description}
                                 </p>
 
@@ -487,13 +486,13 @@ const XNKMinhPhucPricingContent = () => {
                                             <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center mt-0.5">
                                                 <Check className="w-3 h-3 text-white" />
                                             </div>
-                                            <span className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed">
+                                            <span className="text-white/65 text-sm leading-relaxed">
                                                 {feature}
                                             </span>
                                         </li>
                                     ))}
                                     {pkg.features.length > 5 && (
-                                        <li className="text-slate-500 text-sm font-medium">
+                                        <li className="text-white/45 text-sm font-medium">
                                             +{pkg.features.length - 5} tính năng khác...
                                         </li>
                                     )}
@@ -517,35 +516,35 @@ const XNKMinhPhucPricingContent = () => {
                     {/* Enhanced Add-ons */}
                     <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-3xl"></div>
-                        <div className="relative bg-white/50 backdrop-blur-sm dark:bg-slate-900/50 rounded-3xl p-10 border border-white/20 dark:border-slate-700/20">
+                        <div className="relative glass rounded-3xl p-10 border border-white/8">
                             <div className="text-center mb-10">
                                 <h3 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
                                     Dịch Vụ Bổ Sung
                                 </h3>
-                                <p className="text-slate-600 dark:text-slate-400">
+                                <p className="text-white/55">
                                     Nâng cao dự án của bạn với những tính năng tùy chọn này
                                 </p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                                 {addOns.map((addon, index) => (
-                                    <div key={index} className="group bg-white/80 backdrop-blur-sm dark:bg-slate-800/80 rounded-2xl p-6 border border-white/20 dark:border-slate-700/20 hover:shadow-lg transition-all duration-300">
+                                    <div key={index} className="group glass glass-hover rounded-2xl p-6 border border-white/8 hover:shadow-glass transition-all duration-300">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white">
                                                 {addon.icon}
                                             </div>
-                                            <h4 className="font-semibold text-slate-900 dark:text-white">
+                                            <h4 className="font-semibold text-white/90">
                                                 {addon.name}
                                             </h4>
                                         </div>
 
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                            <span className="text-lg font-bold text-indigo-400">
                                                 {addon.price}
                                             </span>
                                         </div>
 
-                                        <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                                        <p className="text-white/55 text-sm leading-relaxed">
                                             {addon.description}
                                         </p>
                                     </div>
@@ -557,17 +556,17 @@ const XNKMinhPhucPricingContent = () => {
                     {/* Enhanced CTA Section */}
                     <div className="relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl opacity-10"></div>
-                        <div className="relative text-center bg-white/30 backdrop-blur-sm dark:bg-slate-900/30 rounded-3xl p-12 border border-white/20 dark:border-slate-700/20">
+                        <div className="relative text-center glass rounded-3xl p-12 border border-white/8">
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white mb-6">
                                 <Rocket className="w-5 h-5" />
                                 <span className="font-semibold">Sẵn Sàng Bắt Đầu</span>
                             </div>
 
-                            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+                            <h3 className="text-3xl font-bold text-white/90 mb-4">
                                 Sẵn Sàng Bắt Đầu?
                             </h3>
 
-                            <p className="text-xl text-slate-600 dark:text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+                            <p className="text-xl text-white/65 mb-8 max-w-2xl mx-auto leading-relaxed">
                                 Hãy thảo luận về dự án của bạn và tìm giải pháp hoàn hảo
                             </p>
 
@@ -578,7 +577,7 @@ const XNKMinhPhucPricingContent = () => {
                                         Nhận Báo Giá Miễn Phí
                                     </Link>
                                 </Button>
-                                <Button variant="outline" asChild className="border-2 border-blue-200 hover:border-blue-400 px-8 py-3 rounded-xl font-semibold">
+                                <Button variant="outline" asChild className="border border-indigo-500/30 hover:border-indigo-400/50 text-indigo-300 hover:bg-indigo-500/10 px-8 py-3 rounded-xl font-semibold">
                                     <Link href="/contact">
                                         Liên Hệ
                                     </Link>
@@ -593,8 +592,8 @@ const XNKMinhPhucPricingContent = () => {
             {/* Enhanced Modal */}
             {selectedPackage && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[1001]">
-                    <div className="bg-white/95 backdrop-blur-sm dark:bg-slate-900/95 rounded-3xl max-w-5xl w-full max-h-[90vh] border border-white/20 dark:border-slate-700/20 shadow-2xl flex flex-col">
-                        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
+                    <div className="bg-dark-100/95 backdrop-blur-2xl rounded-3xl max-w-5xl w-full max-h-[90vh] border border-white/10 shadow-2xl flex flex-col">
+                        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                             <div className="p-8">
                                 {/* Modal Header */}
                                 <div className="flex items-center justify-between mb-8">
@@ -606,10 +605,10 @@ const XNKMinhPhucPricingContent = () => {
                                             {selectedPackage.icon}
                                         </div>
                                         <div>
-                                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+                                            <h2 className="text-3xl font-bold text-white/90">
                                                 {selectedPackage.name}
                                             </h2>
-                                            <p className="text-slate-600 dark:text-slate-400 text-lg">
+                                            <p className="text-white/55 text-lg">
                                                 {selectedPackage.description}
                                             </p>
                                         </div>
@@ -617,7 +616,7 @@ const XNKMinhPhucPricingContent = () => {
                                     <Button
                                         variant="ghost"
                                         onClick={() => setSelectedPackage(null)}
-                                        className="text-slate-500 hover:text-slate-700 p-2 rounded-full"
+                                        className="text-white/45 hover:text-white/75 p-2 rounded-full hover:bg-white/5"
                                     >
                                         <X className="w-6 h-6" />
                                     </Button>
@@ -627,7 +626,7 @@ const XNKMinhPhucPricingContent = () => {
                                     {/* Features */}
                                     <div className="space-y-6">
                                         <div>
-                                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                            <h3 className="text-xl font-bold text-white/90 mb-4 flex items-center gap-2">
                                                 <Check className="w-5 h-5 text-emerald-500" />
                                                 Tính Năng Bao Gồm
                                             </h3>
@@ -637,7 +636,7 @@ const XNKMinhPhucPricingContent = () => {
                                                         <div className="flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center mt-0.5">
                                                             <Check className="w-3 h-3 text-white" />
                                                         </div>
-                                                        <span className="text-slate-700 dark:text-slate-300 text-sm">
+                                                        <span className="text-white/65 text-sm">
                                                             {feature}
                                                         </span>
                                                     </li>
@@ -647,7 +646,7 @@ const XNKMinhPhucPricingContent = () => {
 
                                         {selectedPackage.notIncluded && (
                                             <div>
-                                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                                <h3 className="text-xl font-bold text-white/90 mb-4 flex items-center gap-2">
                                                     <X className="w-5 h-5 text-red-500" />
                                                     Không Bao Gồm
                                                 </h3>
@@ -655,7 +654,7 @@ const XNKMinhPhucPricingContent = () => {
                                                     {selectedPackage.notIncluded.map((feature, index) => (
                                                         <li key={index} className="flex items-start gap-3">
                                                             <X className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
-                                                            <span className="text-slate-700 dark:text-slate-300 text-sm">
+                                                            <span className="text-white/65 text-sm">
                                                                 {feature}
                                                             </span>
                                                         </li>
@@ -667,29 +666,29 @@ const XNKMinhPhucPricingContent = () => {
 
                                     {/* Project Details */}
                                     <div className="space-y-6">
-                                        <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl">
-                                            <h4 className="font-bold text-xl text-slate-900 dark:text-white mb-2">
+                                        <div className="p-6 bg-indigo-500/8 border border-indigo-500/15 rounded-2xl">
+                                            <h4 className="font-bold text-xl text-white/90 mb-2">
                                                 Giá Gói
                                             </h4>
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-slate-600 dark:text-slate-400">Giá cơ bản:</span>
-                                                    <span className="font-semibold text-slate-900 dark:text-white">
+                                                    <span className="text-white/55">Giá cơ bản:</span>
+                                                    <span className="font-semibold text-white/90">
                                                         {selectedPackage.basePrice > 0 ? `${selectedPackage.basePrice}tr` : 'Thỏa thuận'}
                                                     </span>
                                                 </div>
                                                 {selectedDesign !== 'template-existing' && selectedPackage.basePrice > 0 && (
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-slate-600 dark:text-slate-400">Design option:</span>
-                                                        <span className="font-semibold text-slate-900 dark:text-white">
+                                                        <span className="text-white/55">Design option:</span>
+                                                        <span className="font-semibold text-white/90">
                                                             +{Math.round(selectedPackage.basePrice * (designOptions.find(d => d.id === selectedDesign)?.priceMultiplier || 0) * 100) / 100}tr
                                                         </span>
                                                     </div>
                                                 )}
                                                 {selectedFeatures.length > 0 && (
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-slate-600 dark:text-slate-400">Tính năng bổ sung:</span>
-                                                        <span className="font-semibold text-slate-900 dark:text-white">
+                                                        <span className="text-white/55">Tính năng bổ sung:</span>
+                                                        <span className="font-semibold text-white/90">
                                                             +{selectedFeatures.reduce((total, featureId) => {
                                                                 const feature = additionalFeatures.find(f => f.id === featureId)
                                                                 return total + (feature?.price || 0)
@@ -699,8 +698,8 @@ const XNKMinhPhucPricingContent = () => {
                                                 )}
                                                 {contractType === 'company' && selectedPackage.basePrice > 0 && (
                                                     <div className="flex items-center justify-between">
-                                                        <span className="text-slate-600 dark:text-slate-400">VAT (10%):</span>
-                                                        <span className="font-semibold text-slate-900 dark:text-white">
+                                                        <span className="text-white/55">VAT (10%):</span>
+                                                        <span className="font-semibold text-white/90">
                                                             +{Math.round(((selectedPackage.basePrice + (selectedPackage.basePrice * (designOptions.find(d => d.id === selectedDesign)?.priceMultiplier || 0.0))) + selectedFeatures.reduce((total, featureId) => {
                                                                 const feature = additionalFeatures.find(f => f.id === featureId)
                                                                 return total + (feature?.price || 0)
@@ -710,46 +709,46 @@ const XNKMinhPhucPricingContent = () => {
                                                 )}
                                                 <div className="border-t pt-2">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-bold text-slate-900 dark:text-white">Tổng cộng:</span>
-                                                        <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                                                        <span className="font-bold text-white/90">Tổng cộng:</span>
+                                                        <span className="text-2xl font-bold text-indigo-400">
                                                             {selectedPackage.basePrice > 0 ? `${finalPrice}tr` : 'Thỏa thuận'}
                                                         </span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                            <div className="text-sm text-white/55 mt-1">
                                                 {selectedPackage.period}
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 gap-4">
-                                            <div className="p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl">
-                                                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/8">
+                                                <h4 className="font-semibold text-white/90 mb-2">
                                                     ⏱️ Thời Gian Thực Hiện
                                                 </h4>
-                                                <p className="text-slate-700 dark:text-slate-300">
+                                                <p className="text-white/65">
                                                     {selectedPackage.timeline}
                                                 </p>
                                             </div>
 
-                                            <div className="p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl">
-                                                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/8">
+                                                <h4 className="font-semibold text-white/90 mb-2">
                                                     🛠️ Công Nghệ Sử Dụng
                                                 </h4>
                                                 <div className="flex flex-wrap gap-2">
                                                     {selectedPackage.techStack.map((tech, index) => (
-                                                        <span key={index} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                                                        <span key={index} className="px-3 py-1 bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 rounded-full text-sm font-medium">
                                                             {tech}
                                                         </span>
                                                     ))}
                                                 </div>
                                             </div>
 
-                                            <div className="p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl">
-                                                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+                                            <div className="p-4 bg-white/5 rounded-xl border border-white/8">
+                                                <h4 className="font-semibold text-white/90 mb-2">
                                                     🎯 Hỗ Trợ & Bảo Hành
                                                 </h4>
-                                                <p className="text-slate-700 dark:text-slate-300 text-sm">
+                                                <p className="text-white/65 text-sm">
                                                     {selectedPackage.support}
                                                 </p>
                                             </div>
@@ -759,9 +758,9 @@ const XNKMinhPhucPricingContent = () => {
 
                                 {/* Design Options */}
                                 {selectedPackage.id !== 'custom' && (
-                                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                            <Rocket className="w-5 h-5 text-blue-500" />
+                                    <div className="mt-8 pt-6 border-t border-white/8">
+                                        <h3 className="text-xl font-bold text-white/90 mb-6 flex items-center gap-2">
+                                            <Rocket className="w-5 h-5 text-indigo-400" />
                                             Chọn Phương Thức Thiết Kế
                                         </h3>
 
@@ -770,8 +769,8 @@ const XNKMinhPhucPricingContent = () => {
                                                 <div key={option.id} className={clsx(
                                                     'p-4 rounded-xl border-2 cursor-pointer transition-all duration-300',
                                                     selectedDesign === option.id
-                                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                        : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                                                        ? 'border-indigo-500/50 bg-indigo-500/10'
+                                                        : 'border-white/10 hover:border-indigo-400/30 hover:bg-white/4'
                                                 )}>
                                                     <label className="cursor-pointer">
                                                         <input
@@ -788,14 +787,14 @@ const XNKMinhPhucPricingContent = () => {
                                                             </div>
                                                             <div className="flex-1">
                                                                 <div className="flex items-center justify-between mb-2">
-                                                                    <h4 className="font-semibold text-slate-900 dark:text-white">
+                                                                    <h4 className="font-semibold text-white/90">
                                                                         {option.name}
                                                                     </h4>
-                                                                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                                                    <span className="text-sm font-bold text-indigo-400">
                                                                         {option.priceMultiplier === 0.0 ? 'Miễn phí' : `+${Math.round(option.priceMultiplier * 100)}%`}
                                                                     </span>
                                                                 </div>
-                                                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                                <p className="text-sm text-white/55">
                                                                     {option.description}
                                                                 </p>
                                                             </div>
@@ -809,9 +808,9 @@ const XNKMinhPhucPricingContent = () => {
 
                                 {/* Contract Type */}
                                 {selectedPackage.id !== 'custom' && (
-                                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                            <Shield className="w-5 h-5 text-blue-500" />
+                                    <div className="mt-8 pt-6 border-t border-white/8">
+                                        <h3 className="text-xl font-bold text-white/90 mb-6 flex items-center gap-2">
+                                            <Shield className="w-5 h-5 text-indigo-400" />
                                             Chọn Loại Hợp Đồng
                                         </h3>
 
@@ -819,8 +818,8 @@ const XNKMinhPhucPricingContent = () => {
                                             <div className={clsx(
                                                 'p-4 rounded-xl border-2 cursor-pointer transition-all duration-300',
                                                 contractType === 'freelancer'
-                                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                                                    ? 'border-indigo-500/50 bg-indigo-500/10'
+                                                    : 'border-white/10 hover:border-indigo-400/30 hover:bg-white/4'
                                             )}>
                                                 <label className="cursor-pointer">
                                                     <input
@@ -836,10 +835,10 @@ const XNKMinhPhucPricingContent = () => {
                                                             <Star className="w-5 h-5" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                                                            <h4 className="font-semibold text-white/90 mb-1">
                                                                 Hợp Đồng Freelancer
                                                             </h4>
-                                                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                            <p className="text-sm text-white/55">
                                                                 Không VAT - Giá như hiển thị
                                                             </p>
                                                         </div>
@@ -850,8 +849,8 @@ const XNKMinhPhucPricingContent = () => {
                                             <div className={clsx(
                                                 'p-4 rounded-xl border-2 cursor-pointer transition-all duration-300',
                                                 contractType === 'company'
-                                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                                    : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                                                    ? 'border-indigo-500/50 bg-indigo-500/10'
+                                                    : 'border-white/10 hover:border-indigo-400/30 hover:bg-white/4'
                                             )}>
                                                 <label className="cursor-pointer">
                                                     <input
@@ -867,10 +866,10 @@ const XNKMinhPhucPricingContent = () => {
                                                             <Crown className="w-5 h-5" />
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-semibold text-slate-900 dark:text-white mb-1">
+                                                            <h4 className="font-semibold text-white/90 mb-1">
                                                                 Hợp Đồng Công Ty
                                                             </h4>
-                                                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                                                            <p className="text-sm text-white/55">
                                                                 Có VAT 10% - Có hóa đơn đỏ
                                                             </p>
                                                         </div>
@@ -883,21 +882,21 @@ const XNKMinhPhucPricingContent = () => {
 
                                 {/* Additional Features Selection */}
                                 {selectedPackage.id !== 'custom' && (
-                                    <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                                            <Settings className="w-5 h-5 text-blue-500" />
+                                    <div className="mt-8 pt-6 border-t border-white/8">
+                                        <h3 className="text-xl font-bold text-white/90 mb-6 flex items-center gap-2">
+                                            <Settings className="w-5 h-5 text-indigo-400" />
                                             Tính Năng Bổ Sung
                                         </h3>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {additionalFeatures.map((feature) => (
-                                                <div key={feature.id} className="flex items-start gap-3 p-4 bg-white/50 dark:bg-slate-800/50 rounded-xl border border-white/20 dark:border-slate-700/20">
+                                                <div key={feature.id} className="flex items-start gap-3 p-4 bg-white/5 rounded-xl border border-white/8">
                                                     <input
                                                         type="checkbox"
                                                         id={feature.id}
                                                         checked={selectedFeatures.includes(feature.id)}
                                                         onChange={() => handleFeatureToggle(feature.id)}
-                                                        className="mt-1 w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                        className="mt-1 w-5 h-5 accent-indigo-500 bg-white/5 border-white/20 rounded focus:ring-indigo-500 focus:ring-2"
                                                     />
                                                     <div className="flex-1">
                                                         <label htmlFor={feature.id} className="flex items-center gap-2 cursor-pointer">
@@ -905,15 +904,15 @@ const XNKMinhPhucPricingContent = () => {
                                                                 {feature.icon}
                                                             </div>
                                                             <div>
-                                                                <div className="font-semibold text-slate-900 dark:text-white">
+                                                                <div className="font-semibold text-white/90">
                                                                     {feature.name}
                                                                 </div>
-                                                                <div className="text-sm text-slate-600 dark:text-slate-400">
+                                                                <div className="text-sm text-white/55">
                                                                     {feature.description}
                                                                 </div>
                                                             </div>
                                                         </label>
-                                                        <div className="mt-2 text-lg font-bold text-blue-600 dark:text-blue-400">
+                                                        <div className="mt-2 text-lg font-bold text-indigo-400">
                                                             +{feature.price}tr
                                                         </div>
                                                     </div>
@@ -923,7 +922,7 @@ const XNKMinhPhucPricingContent = () => {
                                     </div>
                                 )}
 
-                                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+                                <div className="mt-8 pt-6 border-t border-white/8">
                                     <div className="flex flex-col sm:flex-row gap-4">
                                         <Button
                                             onClick={handleOrderClick}
@@ -946,21 +945,21 @@ const XNKMinhPhucPricingContent = () => {
             {/* Contact Form Modal */}
             {showContactForm && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[1002]">
-                    <div className="bg-white/95 backdrop-blur-sm dark:bg-slate-900/95 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/20 dark:border-slate-700/20 shadow-2xl">
+                    <div className="bg-dark-100/95 backdrop-blur-2xl rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                                    <h2 className="text-2xl font-bold text-white/90">
                                         Thông Tin Liên Hệ
                                     </h2>
-                                    <p className="text-slate-600 dark:text-slate-400">
+                                    <p className="text-white/55">
                                         Vui lòng điền thông tin để chúng tôi liên hệ báo giá
                                     </p>
                                 </div>
                                 <Button
                                     variant="ghost"
                                     onClick={() => setShowContactForm(false)}
-                                    className="text-slate-500 hover:text-slate-700 p-2 rounded-full"
+                                    className="text-white/45 hover:text-white/75 p-2 rounded-full hover:bg-white/5"
                                 >
                                     <X className="w-6 h-6" />
                                 </Button>
@@ -985,7 +984,7 @@ const XNKMinhPhucPricingContent = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        <label htmlFor="name" className="block text-sm font-medium text-white/65 mb-2">
                                             Họ và tên *
                                         </label>
                                         <input
@@ -995,12 +994,12 @@ const XNKMinhPhucPricingContent = () => {
                                             required
                                             value={contactForm.name}
                                             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white/90 placeholder:text-white/25 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                                             placeholder="Nhập họ và tên"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        <label htmlFor="email" className="block text-sm font-medium text-white/65 mb-2">
                                             Email *
                                         </label>
                                         <input
@@ -1010,7 +1009,7 @@ const XNKMinhPhucPricingContent = () => {
                                             required
                                             value={contactForm.email}
                                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white/90 placeholder:text-white/25 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                                             placeholder="email@example.com"
                                         />
                                     </div>
@@ -1018,7 +1017,7 @@ const XNKMinhPhucPricingContent = () => {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        <label htmlFor="phone" className="block text-sm font-medium text-white/65 mb-2">
                                             Số điện thoại *
                                         </label>
                                         <input
@@ -1028,12 +1027,12 @@ const XNKMinhPhucPricingContent = () => {
                                             required
                                             value={contactForm.phone}
                                             onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white/90 placeholder:text-white/25 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                                             placeholder="0123456789"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="company" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                        <label htmlFor="company" className="block text-sm font-medium text-white/65 mb-2">
                                             Công ty
                                         </label>
                                         <input
@@ -1042,14 +1041,14 @@ const XNKMinhPhucPricingContent = () => {
                                             name="company"
                                             value={contactForm.company}
                                             onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
-                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white/90 placeholder:text-white/25 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                                             placeholder="Tên công ty (tùy chọn)"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="message" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                                    <label htmlFor="message" className="block text-sm font-medium text-white/65 mb-2">
                                         Yêu cầu thêm
                                     </label>
                                     <textarea
@@ -1058,23 +1057,23 @@ const XNKMinhPhucPricingContent = () => {
                                         rows={4}
                                         value={contactForm.message}
                                         onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                                        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white/90 placeholder:text-white/25 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                                         placeholder="Mô tả thêm về dự án của bạn..."
                                     />
                                 </div>
 
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl">
-                                    <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+                                <div className="bg-indigo-500/8 border border-indigo-500/15 p-4 rounded-xl">
+                                    <h4 className="font-semibold text-white/90 mb-2">
                                         Tóm tắt đơn hàng:
                                     </h4>
-                                    <div className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                                    <div className="text-sm text-white/55 space-y-1">
                                         <div>Gói: {selectedPackage?.name}</div>
                                         <div>Design: {designOptions.find(d => d.id === selectedDesign)?.name}</div>
                                         <div>Hợp đồng: {contractType === 'freelancer' ? 'Freelancer' : 'Công ty (VAT 10%)'}</div>
                                         {selectedFeatures.length > 0 && (
                                             <div>Tính năng: {selectedFeatures.map(id => additionalFeatures.find(f => f.id === id)?.name).join(', ')}</div>
                                         )}
-                                        <div className="font-semibold text-blue-600 dark:text-blue-400">
+                                        <div className="font-semibold text-indigo-400">
                                             Tổng: {finalPrice}tr
                                         </div>
                                     </div>
