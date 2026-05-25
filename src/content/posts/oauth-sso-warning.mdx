@@ -1,0 +1,16 @@
+---
+title: "OAuth/SSO integration: the part of fullstack nobody warned me about"
+date: "2026-01-18"
+excerpt: "Enterprise SSO sounds like a config job. It is not. Notes from the trenches."
+---
+
+The first time I shipped OAuth/SSO for an enterprise tenant I assumed it would
+be a long afternoon. It was three weeks. The protocol is the easy part. The
+hard part is everything around it — clock skew, certificate rotation, attribute
+mapping disagreements between IdPs, and customers who configured their own IdP
+years ago and no longer remember how.
+
+## What I'd tell past me
+
+Start with a single tenant in staging. Build the unhappy-path UI first. And
+treat metadata expiry as a Sev-3 you forgot to schedule.

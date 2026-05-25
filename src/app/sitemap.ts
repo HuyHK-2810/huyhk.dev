@@ -1,36 +1,25 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from "next";
+import { getAllPosts } from "@/lib/posts";
+
+const BASE = "https://huyhk.dev";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    return [
-        {
-            url: 'https://huyhk.dev',
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 1,
-        },
-        {
-            url: 'https://huyhk.dev/projects',
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.8,
-        },
-        {
-            url: 'https://huyhk.dev/contact',
-            lastModified: new Date(),
-            changeFrequency: 'yearly',
-            priority: 0.5,
-        },
-        {
-            url: 'https://huyhk.dev/pricing',
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.9,
-        },
-        {
-            url: 'https://huyhk.dev/pricing-xnkminhphuc',
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 0.7,
-        },
-    ]
-} 
+  const now = new Date();
+
+  const staticRoutes: MetadataRoute.Sitemap = [
+    { url: `${BASE}/`, lastModified: now, changeFrequency: "monthly", priority: 1 },
+    { url: `${BASE}/writing`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE}/cv`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${BASE}/pricing/xnkminhphuc`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+  ];
+
+  const postRoutes: MetadataRoute.Sitemap = getAllPosts().map((p) => ({
+    url: `${BASE}/writing/${p.slug}`,
+    lastModified: p.date ? new Date(p.date) : now,
+    changeFrequency: "yearly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...postRoutes];
+}
