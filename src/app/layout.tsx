@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import ThemeScript from "@/components/brand/theme-script";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -60,6 +61,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://huyhk.dev",
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
   },
   robots: {
     index: true,
@@ -73,13 +77,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="light" style={{ colorScheme: "light" }}>
+    <html lang="en" suppressHydrationWarning>
       <head />
       <body
         className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-paper text-ink`}
       >
+        <ThemeScript />
         {children}
       </body>
-    </html >
+    </html>
   );
 }

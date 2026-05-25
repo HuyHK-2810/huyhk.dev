@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-ember: #FF6B35;
   --color-ember-soft: #FFF4EF;
@@ -19,8 +21,8 @@
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
-  --container-prose: 680px;
-  --container-wide: 1080px;
+  --container-prose: 720px;
+  --container-wide: 1120px;
 
   --tracking-label: 0.08em;
 }
@@ -36,6 +38,20 @@
   --paper-pure: #FFFFFF;
   --line: rgba(26, 26, 26, 0.12);
   --line-soft: rgba(26, 26, 26, 0.06);
+}
+
+html.dark {
+  --ember: #FF7B47;
+  --ember-soft: #2A1813;
+  --ember-deep: #FF9970;
+  --ink: #ECE6DA;
+  --ink-soft: #B8B0A0;
+  --ink-faint: #7A7268;
+  --paper: #141312;
+  --paper-pure: #1B1A18;
+  --line: rgba(236, 230, 218, 0.14);
+  --line-soft: rgba(236, 230, 218, 0.07);
+  color-scheme: dark;
 }
 
 html {
@@ -65,7 +81,7 @@ body {
 
 ::selection {
   background-color: var(--ember);
-  color: var(--paper-pure);
+  color: #FFFFFF;
 }
 
 a,
@@ -112,10 +128,7 @@ button,
   background-size: 16px 16px;
 }
 
-/* Scroll-reveal: progressive enhancement with ghost-state.
-   Default state is fully visible — only fades when JS marks the document ready.
-   When armed, hidden items still show at low opacity so the page never feels
-   blank during scroll or in print/screenshots. */
+/* Scroll-reveal: progressive enhancement with ghost-state. */
 .reveal {
   transition: opacity 0.5s ease, transform 0.5s ease;
 }
@@ -139,13 +152,98 @@ button,
   }
 }
 
+/* Heading anchors injected by rehype-autolink-headings */
+.heading-anchor {
+  margin-left: 0.5rem;
+  opacity: 0;
+  text-decoration: none;
+  color: var(--ember);
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+h2:hover .heading-anchor,
+h3:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
+}
+
+/* rehype-pretty-code: dual-theme switching */
+figure[data-rehype-pretty-code-figure] {
+  margin: 1.75rem 0;
+}
+figure[data-rehype-pretty-code-figure] pre {
+  margin: 0;
+}
+figure[data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--paper-pure);
+}
+figure[data-rehype-pretty-code-figure] [data-rehype-pretty-code-title] + pre {
+  border-radius: 0 0 6px 6px;
+}
+
+/* Light/dark theme tokens from rehype-pretty-code */
+html:not(.dark) pre code [data-theme="dark"],
+html:not(.dark) pre [data-theme="dark"] {
+  display: none;
+}
+html.dark pre code [data-theme="light"],
+html.dark pre [data-theme="light"] {
+  display: none;
+}
+html.dark code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+html.dark code {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+}
+
+code[data-line-numbers] {
+  counter-reset: line;
+}
+code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: var(--ink-faint);
+}
+[data-highlighted-line] {
+  background-color: rgba(255, 107, 53, 0.08);
+  border-left: 2px solid var(--ember);
+  padding-left: calc(1rem - 2px);
+  margin-left: -1rem;
+  margin-right: -1rem;
+  padding-right: 1rem;
+}
+[data-highlighted-chars] {
+  background-color: rgba(255, 107, 53, 0.18);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.prose-body > :first-child {
+  margin-top: 0;
+}
+
 @media print {
   .reveal:not(.visible),
   .reveal-ready .reveal:not(.visible) {
     opacity: 1 !important;
     transform: none !important;
   }
-  /* Hide nav, footer, and the floating Nimbalyst button when printing CV */
   header.sticky,
   footer {
     display: none !important;

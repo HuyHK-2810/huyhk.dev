@@ -21,7 +21,7 @@ export default function Section({
       id={id}
       className={`${divider ? "border-t border-[var(--line-soft)]" : ""} ${className}`}
     >
-      <div className="mx-auto max-w-[var(--container-wide)] px-6 py-20 md:px-12 md:py-24">
+      <div className="mx-auto max-w-[var(--container-wide)] px-6 py-16 md:px-12 md:py-20">
         {bleed ? (
           children
         ) : (

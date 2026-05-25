@@ -2,82 +2,183 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/brand/nav";
 import Footer from "@/components/brand/footer";
-import { getAllPosts, getPostSlugs } from "@/lib/posts";
+import PostMeta from "@/components/writing/post-meta";
+import PostFooter from "@/components/writing/post-footer";
+import TableOfContents from "@/components/writing/toc";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  type Locale,
+  getAdjacentPosts,
+  getPost,
+  getPostFilename,
+  getPostSlugs,
+  getRelatedPosts,
+} from "@/lib/posts";
+import { getHeadings } from "@/lib/toc";
 
 type Params = { slug: string };
+type Search = { lang?: string };
 
 export function generateStaticParams(): Params[] {
   return getPostSlugs().map((slug) => ({ slug }));
 }
 
-function formatDate(iso: string): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  });
+function resolveLocale(input: string | undefined): Locale {
+  return (LOCALES as readonly string[]).includes(input ?? "")
+    ? (input as Locale)
+    : DEFAULT_LOCALE;
 }
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<Search>;
 }) {
   const { slug } = await params;
-  const post = getAllPosts().find((p) => p.slug === slug);
+  const { lang } = await searchParams;
+  const locale = resolveLocale(lang);
+  const post = getPost(slug, locale);
   if (!post) return { title: "Not found — huyHK" };
+  const url = `/writing/${slug}${locale === "vi" ? "?lang=vi" : ""}`;
   return {
     title: `${post.title} — huyHK`,
     description: post.excerpt,
+    alternates: {
+      canonical: url,
+      languages: Object.fromEntries(
+        post.availableLocales.map((l) => [
+          l === "en" ? "en-US" : "vi-VN",
+          l === "en" ? `/writing/${slug}` : `/writing/${slug}?lang=${l}`,
+        ]),
+      ),
+    },
+    openGraph: {
+      type: "article",
+      title: post.title,
+      description: post.excerpt,
+      publishedTime: post.date,
+      tags: post.tags,
+      url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.excerpt,
+    },
   };
 }
 
 export default async function WritingPost({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<Search>;
 }) {
   const { slug } = await params;
-  const post = getAllPosts().find((p) => p.slug === slug);
+  const { lang } = await searchParams;
+  const locale = resolveLocale(lang);
+
+  const post = getPost(slug, locale);
   if (!post) notFound();
+
+  const filename = getPostFilename(slug, post.locale);
+  if (!filename) notFound();
 
   let Body: React.ComponentType;
   try {
-    Body = (await import(`@/content/posts/${slug}.mdx`)).default;
+    Body = (await import(`@/content/posts/${filename}`)).default;
   } catch {
     notFound();
   }
+
+  const headings = getHeadings(filename);
+  const related = getRelatedPosts(slug, post.locale);
+  const { prev, next } = getAdjacentPosts(slug, post.locale);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    inLanguage: post.locale === "vi" ? "vi-VN" : "en-US",
+    keywords: post.tags.join(", "),
+    wordCount: post.wordCount,
+    author: {
+      "@type": "Person",
+      name: "Hồ Khắc Huy",
+      url: "https://huyhk.dev",
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Hồ Khắc Huy",
+      url: "https://huyhk.dev",
+    },
+    mainEntityOfPage: `https://huyhk.dev/writing/${slug}`,
+  };
+
+  const backLabel = post.locale === "vi" ? "← tất cả bài viết" : "← all writing";
 
   return (
     <>
       <Nav />
       <main className="mx-auto max-w-[var(--container-wide)] px-6 pb-24 pt-[112px] md:px-12 md:pt-[120px]">
-        <div className="max-w-[var(--container-prose)]">
-        <Link
-          href="/writing"
-          className="font-mono text-[13px] text-ink-faint hover:text-ember"
-        >
-          ← all writing
-        </Link>
+        <div className="grid gap-10 xl:grid-cols-[1fr_220px]">
+          <div className="mx-auto w-full max-w-[var(--container-prose)] xl:mx-0">
+            <Link
+              href={`/writing${post.locale === "vi" ? "?lang=vi" : ""}`}
+              className="font-mono text-[13px] text-ink-faint hover:text-ember"
+            >
+              {backLabel}
+            </Link>
 
-        <article className="mt-8">
-          <div className="font-mono text-[12px] text-ember-deep">
-            <time dateTime={post.date}>{formatDate(post.date)}</time>
-          </div>
-          <h1 className="mt-3 font-serif text-[clamp(32px,5vw,48px)] font-normal leading-[1.15] tracking-tight text-ink">
-            {post.title}
-          </h1>
+            <article className="mt-8">
+              <PostMeta
+                date={post.date}
+                readingMinutes={post.readingMinutes}
+                tags={post.tags}
+                locale={post.locale}
+                slug={slug}
+                availableLocales={post.availableLocales}
+              />
+              <h1 className="mt-4 font-serif text-[clamp(32px,5vw,48px)] font-normal leading-[1.15] tracking-tight text-ink">
+                {post.title}
+              </h1>
+              {post.excerpt && (
+                <p className="mt-5 font-serif text-[19px] font-light leading-[1.55] text-ink-soft">
+                  {post.excerpt}
+                </p>
+              )}
 
-          <div className="prose-body mt-10">
-            <Body />
+              <div className="prose-body mt-10">
+                <Body />
+              </div>
+
+              <PostFooter
+                prev={prev}
+                next={next}
+                related={related}
+                locale={post.locale}
+              />
+            </article>
           </div>
-        </article>
+
+          <aside className="hidden xl:block">
+            <TableOfContents headings={headings} />
+          </aside>
         </div>
       </main>
       <Footer />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     </>
   );
 }
+

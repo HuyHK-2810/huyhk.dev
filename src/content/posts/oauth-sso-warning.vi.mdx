@@ -1,0 +1,201 @@
+---
+title: "OAuth/SSO doanh nghiệp: phần của fullstack mà không ai cảnh báo tôi trước"
+date: "2026-01-18"
+excerpt: "Enterprise SSO nghe như một việc config. Không phải. Ba tuần, tám tenant, và một danh sách những sai lầm tôi vẫn còn trả giá."
+tags: ["fullstack", "auth", "lessons"]
+---
+
+Lần đầu tiên tôi ship enterprise SSO cho một khách hàng, tôi báo project
+manager *"ba bốn ngày, tùy IdP."* Nó kéo dài ba tuần. Tám khách hàng. Hai
+sự cố production. Một lời xin lỗi thầm gửi đến team ở São Paulo có sáng
+thứ Hai bị tôi phá hỏng.
+
+Đây là post-mortem tôi đã không viết lúc đó, đóng gói lại thành lời cảnh
+báo mà tôi ước có người nói cho mình.
+
+## Protocol là phần dễ nhất
+
+Nếu chỉ đọc OAuth 2.0 RFC, bạn sẽ hợp lý kết luận đây là bài toán đã giải.
+Có sơ đồ. Có mũi tên. Mũi tên có nhãn. Cái library bạn `npm install` quảng
+cáo là handle hết.
+
+Library *thực sự* handle protocol. Protocol không phải vấn đề.
+
+Vấn đề là mọi thứ xung quanh nó:
+
+- **Lệch đồng hồ (clock skew).** Server IdP của khách nhanh hơn server bạn
+  47 giây, và assertion chết với lỗi "future-dated."
+- **Hết hạn certificate.** Cert của họ hết hạn 6 tiếng trước, không ai
+  biết vì cert trước đó có 2 năm "đệm."
+- **Attribute mapping.** Claim `mail` của họ là `nameid`. `nameid` của họ
+  là một UUID không ai dùng. Email thật nằm trong
+  `urn:oid:0.9.2342.19200300.100.1.3`.
+- **Tenant isolation.** Hai khách hàng có nhân viên trùng email, vì cả
+  hai công ty đều mua từ một công ty thứ ba mà bạn cũng có làm khách.
+- **IT của khách đã nghỉ hưu.** IdP cấu hình từ 2019. Không ai biết mật
+  khẩu admin. Nút export bị mờ.
+
+Không thứ nào trong này có trong RFC. Mọi thứ trong này đều có trên
+production.
+
+## Lời nhắn cho chính tôi ngày xưa (một checklist)
+
+Tôi giữ một danh sách từ thời đó. Đây là phiên bản đã dọn dẹp.
+
+<Callout type="warn" title="Trước khi nối tenant đầu tiên">
+Số quyết định bạn không thể đảo ngược sau này nhiều hơn bạn nghĩ. Hãy
+chọn kỹ ngay ngày đầu.
+</Callout>
+
+### 1. Quyết "email có phải là identity không" — trước mọi thứ khác
+
+Bạn sẽ bị cám dỗ dùng email làm user identity, vì mọi spec đều vẽ như
+vậy. Đừng, trừ khi bạn đã "xứng đáng" với hệ quả của nó.
+
+Chuyện sẽ xảy ra:
+
+- Khách đổi domain (`acme.com` → `acmegroup.com`) và mọi user trông như
+  user mới.
+- Khách di chuyển IdP và IdP mới expose một attribute khác làm email
+  "chính."
+- Một nhân viên đổi email khi kết hôn. Tài khoản của họ thành mồ côi.
+
+Pattern an toàn hơn: identity = `(tenant_id, immutable_subject_id)`,
+trong đó `subject_id` là gì đó IdP thề là cố định cho user đó. Email là
+một display attribute bạn update, không phải khóa để join.
+
+Tôi học được điều này ở tenant #6, sau khi đã ship sai cách cho tenant
+#1 đến #5. Migration sau đó thực sự không vui.
+
+### 2. Xây UI cho unhappy-path trước
+
+Happy path là `redirect → callback → set cookie → done`. Bốn mươi dòng
+code và nó chạy từ ngày đầu.
+
+Unhappy path là mọi thứ còn lại:
+
+- IdP trả 500. Bạn muốn hiện lỗi thật cho user, không phải loop vô tận
+  về cùng cái redirect.
+- Assertion valid nhưng attribute mapping thiếu. Bạn muốn fall back
+  sang nhập tay *và* page admin của khách.
+- Tenant đã config nhưng bị disable. Hiện "tài khoản tạm khóa, liên hệ
+  billing@" — chứ không phải 401 chung chung.
+- IdP session của user còn sống nhưng app session đã hết hạn. Re-auth
+  mà không prompt lại IdP, kẻo help desk sẽ nhận ngay câu hỏi *"sao sign
+  in xong nó sign tôi out luôn?"*
+
+Tôi để unhappy path đến cuối. Khi đến đó thì tôi đã ship được hai ticket
+xấu hổ nhất sự nghiệp.
+
+### 3. Coi metadata hết hạn như một outage có lịch trước
+
+Tài liệu IdP metadata có trường `validUntil`. Nó hết hạn. Khi hết hạn,
+mọi đăng nhập của tenant đó fail.
+
+Tôi có tám tenant. Ba tenant có metadata hết hạn cùng một tháng, vào
+những ngày khác nhau. Tôi không có job refresh. Không có job báo trước.
+Tôi có một sự cố Sev-1 vào sáng tenant đầu tiên chết.
+
+```ts
+// cron job tôi nên viết từ ngày đầu
+async function refreshTenantMetadata(tenantId: string) {
+  const tenant = await db.tenant.findUnique({ where: { id: tenantId } });
+  const fresh = await fetchIdpMetadata(tenant.metadataUrl);
+
+  if (fresh.validUntil < addDays(now(), 14)) {
+    await pageOps(
+      `Tenant ${tenant.slug} metadata expires ${fresh.validUntil}, ` +
+      `please coordinate refresh with their IT.`,
+    );
+  }
+
+  await db.tenant.update({
+    where: { id: tenantId },
+    data: { metadataXml: fresh.xml, validUntil: fresh.validUntil },
+  });
+}
+```
+
+Page chính bạn **ít nhất hai tuần** trước khi hết hạn. Đó là khoảng thời
+gian IT của khách cần để schedule, review, ký duyệt, và export metadata
+mới. Tôi học con số này bằng cách trả ba lần.
+
+### 4. "Môi trường test" của khách là một giấc mơ
+
+Khi bạn xin khách một IdP sandbox để test, bạn sẽ nhận một trong những
+câu trả lời sau:
+
+- "Tụi tôi không có."
+- "Tụi tôi có, nhưng nằm sau VPN."
+- "Tụi tôi có, nhưng admin set up đã nghỉ."
+- "Tụi tôi có, nhưng cert đã hết hạn sáu tháng trước."
+
+Trong mọi trường hợp, câu trả lời là: *lên lịch test trực tiếp trên IdP
+production của họ, trong một cửa sổ có kế hoạch, với một tài khoản test
+duy nhất họ tạo cho bạn.*
+
+Đây không phải workaround. Đây là quy trình thật. Đặt lịch tích hợp.
+Mang theo checklist. Test năm scenario end-to-end trong cửa sổ đó:
+
+1. Đăng nhập thành công.
+2. Đăng xuất thành công (thường là cái hay vỡ).
+3. Đăng nhập sai mật khẩu (bạn muốn thấy UI lỗi *của họ*, không phải
+   của bạn).
+4. Tài khoản đã disable.
+5. Re-login sau khi session hết hạn.
+
+Nếu bạn đã ship UI cho unhappy-path từ rule #2, checklist mất 10 phút.
+Nếu chưa, checklist mất một tuần và khách ghét bạn.
+
+### 5. Log không phải "có thì tốt"
+
+Mỗi assertion vào/ra hệ thống bạn đều log lại với:
+
+- `tenant_id`
+- `request_id`
+- `subject_id` (hash nếu cần)
+- issuer
+- timestamp assertion *tự khai*
+- timestamp bạn *quan sát thấy*
+
+Đừng log nội dung assertion ở dạng plaintext. Nhưng log đủ để trả lời
+*"vì sao user X đăng nhập fail vào ngày Y giờ Z"* — mà không cần bảo họ
+reproduce. Họ sẽ không reproduce. Họ sẽ chuyển sang đối thủ có log đầy
+đủ hơn.
+
+Tôi từng có một bug suốt hai tháng: 1 trên 50 lần đăng nhập của một
+tenant bị fail. Không reproduce được. Không có log. Tôi ship logging,
+chờ một tuần, rồi tìm ra trong hai mươi phút — họ có load balancer
+trước IdP, thỉnh thoảng ghi đè tham số `RelayState` trên đường truyền.
+*Đời nào tôi đoán ra được.*
+
+## Tóm tắt không hào nhoáng
+
+Enterprise SSO không phải việc config. Nó là việc *customer success*
+tình cờ liên quan đến protocol. Phần lớn công việc không phải viết code
+— nó là:
+
+- nói chuyện với một IT của khách mà bạn chưa từng gặp,
+- về một phần mềm họ cấu hình từ nhiều năm trước,
+- để fix một vấn đề họ không nghĩ là vấn đề của họ,
+- trên một deadline do người khác đặt.
+
+Phần code là phần dễ. Library lo được.
+
+Cái library không lo được:
+
+- quyết định identity model của bạn,
+- own unhappy paths,
+- own metadata refresh,
+- own quan hệ với khách,
+- own logs,
+- own lịch xoay cert.
+
+Phần đó là việc của bạn. Cũng là phần quyết định tích hợp này thành
+*thành công thầm lặng* hay *pager kêu vào tối thứ Sáu.* Bạn chọn mình
+on-call cho cái nào.
+
+---
+
+*Nếu bài này hữu ích và muốn nhận bài tiếp theo qua email, [nút đăng ký
+nằm cuối mỗi trang](/#contact).*

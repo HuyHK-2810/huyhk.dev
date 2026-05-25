@@ -2,15 +2,157 @@
 title: "Why I still think like a tester after 4 years as a fullstack dev"
 date: "2026-04-12"
 excerpt: "Four years in QA didn't leave when I started writing features. Here's how it still shows up in every PR I open."
+tags: ["career", "testing", "fullstack"]
 ---
 
-I joined FPT Software in late 2016 as a manual tester. By the time I left in
-2020 I was writing code for a living, but the tester DNA never quite left the
-building. This is a note about why I'm grateful for that, and how it still
-shapes the way I open a pull request today.
+I joined FPT Software in late 2016, fresh out of Can Tho University, as a manual
+tester on an enterprise .NET project. By the time I left in 2020 I was writing
+code for a living. The tester DNA never quite left the building.
+
+This is a note about why I'm grateful for that, and how it still shapes every
+PR I open in 2026.
 
 ## The first instinct is still "what breaks this"
 
-Even now, the first thing my brain does when I read a spec isn't "how do I
-build it" — it's "what's the input that breaks it." Empty string. Zero.
-Negative. A user who refreshes mid-submit. A network that hangs at 99%.
+When I read a spec, the first thing my brain does isn't *how do I build it*.
+It's *what's the input that breaks it*. Empty string. Zero. Negative numbers.
+A user who refreshes the page mid-submit. A network that hangs at 99%. A
+timezone four hours off the server's. A button double-clicked because the
+loading state forgot to disable it.
+
+I don't write those down on paper anymore. I sketch them in my head while I'm
+still reading the ticket, and they become the implicit test plan I build the
+feature against. Most of the time I never write the test file — the feature
+just happens to be born already covering those cases, because I shaped it
+around the failures before I shaped it around the happy path.
+
+<Callout type="quote">
+A senior engineer told me once, *"You write code like you don't trust the input."*
+She meant it as a compliment. I took it as the best one I've ever gotten.
+</Callout>
+
+## I treat the spec like an unreliable narrator
+
+QA work taught me that the spec is a story someone told themselves about how
+the feature should behave. It's almost never the full story.
+
+In my last role I shipped a "send invitation email" feature. The spec said:
+*on button click, send an email to the entered address.* Simple. Two days,
+shipped.
+
+Three weeks later it broke production. Not because the code was wrong, but
+because two recruiters had hit the button at the same time for the same
+candidate, and the audit log now had two `sent_at` rows that disagreed on
+whose name was attached. The spec hadn't said anything about concurrency.
+The product manager didn't know to ask.
+
+Test-thinking would have caught that on day one. *Two recruiters, same
+candidate, racing.* It's not even a clever edge case — it's the second test
+case you write if you've ever run a manual test plan with another human.
+
+I now read every spec twice. Once for what it says. Once for what it forgot
+to say. The forgotten cases are where the bugs live.
+
+## The PR description is a test plan in disguise
+
+This is the habit my code-review colleagues notice most often.
+
+When I open a pull request, the description has a section called **"How I
+tested this"**, and it isn't empty. It looks something like:
+
+```md
+## How I tested this
+
+- ✅ Happy path: create invitation, recipient receives email
+- ✅ Empty email field — submit button stays disabled
+- ✅ Invalid email format — inline error, no submit
+- ✅ Recipient already invited — server returns 409, UI shows
+     "already invited" toast
+- ✅ Two recruiters click submit within 1s — only one row in DB,
+     other gets the same toast
+- ⚠️ SMTP timeout — surfaced to user as "try again", logged
+     with retry hint. Not retried automatically; see #4123.
+- ❌ Not tested: throttling under load > 50 req/s (Lokesh has it)
+```
+
+That last line is the one I'm proudest of. *Not tested* is honest. *Not
+tested* is the thing a reviewer can act on. A PR description that pretends
+everything was tested is doing the reviewer a disservice.
+
+The format isn't fancy. It's a checklist with three states — works, works
+with caveat, didn't get to. I picked it up from FPT, where every test case
+had a status, and I never stopped.
+
+## "Definition of done" is an engineer's responsibility
+
+In a lot of teams "definition of done" is a process artifact written by a
+project manager and never read by anyone who writes code. I disagree with
+that framing.
+
+If I'm the engineer who shipped it, I'm the one who can answer *did this
+actually work*. The product manager can tell me what success looks like
+from a customer's point of view; only I can tell them whether the code
+actually produces that outcome under the failure modes they didn't think
+to ask about.
+
+So my personal definition of done has four parts:
+
+1. **The happy path works** and a person on the team can demo it without
+   me sitting next to them.
+2. **The two most obvious failure modes are handled** — usually a network
+   error and a permission error.
+3. **The rollback is one button** — feature flag, env var, or a clean
+   `git revert` with no schema migration baked into it.
+4. **The next person can debug it at 11pm** without DM'ing me. That means
+   logs, error messages that name the actual failing operation, and a
+   structured error payload, not just `Error: 500`.
+
+Nothing on that list is fancy. None of it is "best practice" theatre.
+It's just the four things I wish someone had handed me my first month at
+Remolution.
+
+## The biggest unlearning: tests aren't the goal
+
+Here's the thing I had to actively unlearn when I crossed into development:
+*shipping a passing test suite is not the same as shipping a working
+product.*
+
+I spent my first six months as a developer over-testing. Every helper had
+a unit test. Every component had a snapshot. The CI run took 11 minutes
+and the bugs I shipped were exactly the same bugs my teammates were
+shipping, because I was testing what was easy to test, not what was likely
+to break.
+
+The shift, when it came, was towards *fewer, better integration tests* —
+the ones that exercise the actual path a user takes, including the
+network call, including the database write. Those are slower to write. They
+break more. They also catch real bugs.
+
+<Callout type="tip" title="What I'd tell past me">
+A good integration test is worth twenty snapshot tests. A snapshot test
+just freezes the symptom in place.
+</Callout>
+
+## Why I think this matters for anyone moving into dev
+
+If you came into engineering through a side door — QA, support, design,
+ops, project management — you are carrying something most CS-graduate
+developers don't have: *a memory of the system breaking on real users.*
+
+That memory is a feature, not a bug. It shows up as caution where caution
+is warranted, as questions during sprint planning that prevent two weeks
+of rework, as PR descriptions that name what *isn't* working.
+
+If you're a hiring manager: the tester-to-developer pipeline is one of
+the most underrated talent funnels in the industry. We've already been
+on the receiving end of bad code.
+
+If you're me, nine years in and three career corners later: keep
+opening files like a tester. Keep asking *what breaks this* before *how
+do I build it*. The day I stop is the day I should worry.
+
+---
+
+*This is the first in a series I'm writing about the career arc from
+QA to fullstack to whatever comes next. If you want the rest in your
+inbox, the [subscribe button is at the bottom of every page](/#contact).*

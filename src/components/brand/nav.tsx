@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import BrandMark from "./brand-mark";
+import ThemeToggle from "./theme-toggle";
 
 const links = [
-  { href: "/#story", label: "Story" },
-  { href: "/#how-i-work", label: "How I Work" },
-  { href: "/#projects", label: "Projects" },
   { href: "/writing", label: "Writing" },
+  { href: "/#projects", label: "Projects" },
+  { href: "/#story", label: "Story" },
   { href: "/cv", label: "CV" },
-  { href: "/#now", label: "Now" },
   { href: "/#contact", label: "Say Hi" },
 ];
 
@@ -28,7 +27,7 @@ export default function Nav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line-soft)] bg-[color-mix(in_srgb,var(--paper)_85%,transparent)] backdrop-blur-md">
-      <nav className="mx-auto flex h-[72px] max-w-[var(--container-wide)] items-center justify-between px-6 md:px-12">
+      <nav className="mx-auto flex h-[72px] max-w-[var(--container-wide)] items-center justify-between gap-4 px-6 md:px-12">
         <Link
           href="/"
           aria-label="huyhk.dev — home"
@@ -37,7 +36,7 @@ export default function Nav() {
           <BrandMark size={52} />
         </Link>
 
-        <ul className="hidden items-center gap-7 md:flex">
+        <ul className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
             <li key={link.href}>
               <Link
@@ -50,37 +49,40 @@ export default function Nav() {
           ))}
         </ul>
 
-        <button
-          type="button"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-          className="flex h-10 w-10 items-center justify-center rounded border border-[var(--line)] text-ink md:hidden"
-        >
-          <span className="sr-only">Menu</span>
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            aria-hidden
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            type="button"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded border border-[var(--line)] text-ink md:hidden"
           >
-            {open ? (
-              <>
-                <path d="M3 3l10 10" />
-                <path d="M13 3L3 13" />
-              </>
-            ) : (
-              <>
-                <path d="M2 4h12" />
-                <path d="M2 8h12" />
-                <path d="M2 12h12" />
-              </>
-            )}
-          </svg>
-        </button>
+            <span className="sr-only">Menu</span>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              aria-hidden
+            >
+              {open ? (
+                <>
+                  <path d="M3 3l10 10" />
+                  <path d="M13 3L3 13" />
+                </>
+              ) : (
+                <>
+                  <path d="M2 4h12" />
+                  <path d="M2 8h12" />
+                  <path d="M2 12h12" />
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {open && (

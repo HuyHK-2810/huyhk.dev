@@ -44,26 +44,12 @@ export default function Hero() {
               — and I try to leave them more honest than I found them.
             </p>
 
-            <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[13px] text-ink-soft">
-              <li>
-                <span className="mr-2 text-ember">→</span>9 years building
-                products
-              </li>
-              <li>
-                <span className="mr-2 text-ember">→</span>react · next · node ·
-                python
-              </li>
-              <li>
-                <span className="mr-2 text-ember">→</span>4 years tester DNA
-              </li>
-            </ul>
-
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <a
-                href="#story"
+                href="/writing"
                 className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 font-mono text-[13px] uppercase tracking-[0.08em] text-paper-pure transition-all hover:-translate-y-[1px] hover:bg-ember"
               >
-                Read the story
+                Read the writing
                 <span
                   aria-hidden
                   className="transition-transform group-hover:translate-x-0.5"
@@ -72,19 +58,19 @@ export default function Hero() {
                 </span>
               </a>
               <a
-                href="#contact"
+                href="#story"
                 className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-5 py-3 font-mono text-[13px] uppercase tracking-[0.08em] text-ink transition-all hover:-translate-y-[1px] hover:border-ember hover:text-ember"
               >
-                Say hi
+                The story
               </a>
             </div>
 
-            <p className="mt-8 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
-              Press{" "}
+            <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.1em] text-ink-faint">
+              9 years · react · next · node · python ·{" "}
               <kbd className="rounded border border-[var(--line)] bg-paper-pure px-1.5 py-0.5 text-[11px] text-ink">
                 Q
               </kbd>{" "}
-              to jump to contact
+              jumps to contact
             </p>
           </div>
 
