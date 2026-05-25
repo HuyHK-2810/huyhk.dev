@@ -1,9 +1,73 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
 
-/* Global cursor pointer for interactive elements */
+@theme {
+  --color-ember: #FF6B35;
+  --color-ember-soft: #FFF4EF;
+  --color-ember-deep: #C24A1F;
+
+  --color-ink: #1a1a1a;
+  --color-ink-soft: #4a4a4a;
+  --color-ink-faint: #8a8a8a;
+
+  --color-paper: #FAF8F5;
+  --color-paper-pure: #FFFFFF;
+
+  --color-line: rgba(26, 26, 26, 0.12);
+  --color-line-soft: rgba(26, 26, 26, 0.06);
+
+  --font-serif: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --container-prose: 680px;
+  --container-wide: 1080px;
+
+  --tracking-label: 0.08em;
+}
+
+:root {
+  --ember: #FF6B35;
+  --ember-soft: #FFF4EF;
+  --ember-deep: #C24A1F;
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --ink-faint: #8a8a8a;
+  --paper: #FAF8F5;
+  --paper-pure: #FFFFFF;
+  --line: rgba(26, 26, 26, 0.12);
+  --line-soft: rgba(26, 26, 26, 0.06);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background-color: var(--paper);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+::selection {
+  background-color: var(--ember);
+  color: var(--paper-pure);
+}
+
 a,
 button,
 [role="button"],
@@ -11,58 +75,91 @@ button,
   cursor: pointer;
 }
 
-/* Ensure links have proper cursor */
-.link {
-  cursor: pointer;
+:focus-visible {
+  outline: 2px solid var(--ember);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
-.swiper-pagination {
-  position: absolute;
-  bottom: -5px !important;
-  /* Đưa pagination xuống dưới */
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
+/* Section label: { story } / { projects } etc. */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ember-deep);
+  font-weight: 500;
 }
 
-.swiper-container {
-  position: relative;
-  width: 100%;
-  margin: 0 auto;
+/* Pulsing dot used in hero eyebrow */
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--ember);
+  animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
-.scrollbar-thumb-slate-300 {
-  scrollbar-color: #cbd5e1 transparent;
+/* Decorative dot grid for hero corner */
+.dot-grid {
+  background-image: radial-gradient(circle, var(--line) 1px, transparent 1px);
+  background-size: 16px 16px;
 }
 
-.dark .scrollbar-thumb-slate-600 {
-  scrollbar-color: #475569 transparent;
+/* Scroll-reveal: progressive enhancement with ghost-state.
+   Default state is fully visible — only fades when JS marks the document ready.
+   When armed, hidden items still show at low opacity so the page never feels
+   blank during scroll or in print/screenshots. */
+.reveal {
+  transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-.scrollbar-track-transparent {
-  scrollbar-color: transparent transparent;
+.reveal-ready .reveal:not(.visible) {
+  opacity: 0.35;
+  transform: translateY(8px);
 }
 
-/* WebKit scrollbar styles */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+.reveal-ready .reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
+@media (prefers-reduced-motion: reduce) {
+  .reveal-ready .reveal,
+  .reveal-ready .reveal:not(.visible) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
-  border-radius: 3px;
-}
-
-.dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #475569;
+@media print {
+  .reveal:not(.visible),
+  .reveal-ready .reveal:not(.visible) {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* Hide nav, footer, and the floating Nimbalyst button when printing CV */
+  header.sticky,
+  footer {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt !important;
+  }
+  main {
+    padding-top: 0 !important;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
 }

@@ -1,0 +1,15 @@
+---
+title: "Next.js + Python: my current backend pairing"
+date: "2026-02-04"
+excerpt: "Why I'm reaching for Python alongside Node, and where the seam tends to be."
+---
+
+For the last six months my default backend isn't Node — it's Node *and*
+Python. Node still owns the request/response surface. Python is where the
+extraction and the messy document work happens.
+
+## Where the seam lives
+
+The seam is almost always "structured data out of an unstructured input."
+PDFs, CVs, scanned forms, free-text fields. Node handles the routing and the
+auth around that work; Python does the actual extraction.
