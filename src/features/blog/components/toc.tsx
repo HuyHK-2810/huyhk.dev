@@ -5,6 +5,15 @@ import type { Heading } from "@/features/blog/lib/toc";
 
 type Props = { headings: Heading[] };
 
+/**
+ * Sticky in-article TOC. Renders on lg+ screens (≥1024px). Tracks the
+ * currently in-view heading via IntersectionObserver and highlights it.
+ *
+ * Layout note: the *parent* must own the sticky positioning context. We use
+ * `sticky top-[88px]` here (72px nav + 16px breathing). The grid column in
+ * `writing/[slug]/page.tsx` is the containing block and has `align-self:
+ * start` so this element doesn't get stretched.
+ */
 export default function TableOfContents({ headings }: Props) {
   const [active, setActive] = useState<string | null>(null);
 
@@ -28,33 +37,34 @@ export default function TableOfContents({ headings }: Props) {
     return () => obs.disconnect();
   }, [headings]);
 
-  if (headings.length < 3) return null;
+  if (headings.length < 2) return null;
 
   return (
-    <nav aria-label="On this page" className="hidden xl:block">
-      <div className="sticky top-[96px] max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
-        <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-faint">
-          on this page
-        </div>
-        <ul className="mt-3 space-y-2 border-l border-[var(--line-soft)]">
-          {headings.map((h) => (
-            <li key={h.id}>
-              <a
-                href={`#${h.id}`}
-                className={[
-                  "block -ml-px border-l py-1 pl-3 font-mono text-[12px] leading-[1.4] transition-colors",
-                  h.depth === 3 ? "pl-6" : "",
-                  active === h.id
-                    ? "border-ember text-ember"
-                    : "border-transparent text-ink-faint hover:text-ink",
-                ].join(" ")}
-              >
-                {h.text}
-              </a>
-            </li>
-          ))}
-        </ul>
+    <nav
+      aria-label="On this page"
+      className="sticky top-[88px] self-start max-h-[calc(100vh-110px)] overflow-y-auto pr-1"
+    >
+      <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-faint">
+        on this page
       </div>
+      <ul className="mt-3 space-y-1 border-l border-[var(--line-soft)]">
+        {headings.map((h) => (
+          <li key={h.id}>
+            <a
+              href={`#${h.id}`}
+              className={[
+                "block -ml-px border-l py-1.5 pl-3 font-mono text-[12px] leading-[1.45] transition-colors",
+                h.depth === 3 ? "pl-6" : "",
+                active === h.id
+                  ? "border-ember text-ember"
+                  : "border-transparent text-ink-faint hover:text-ink",
+              ].join(" ")}
+            >
+              {h.text}
+            </a>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }

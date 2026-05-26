@@ -140,8 +140,8 @@ export default async function WritingPost({
     <>
       <Nav />
       <main className="mx-auto max-w-[var(--container-wide)] px-6 pb-24 pt-[112px] md:px-12 md:pt-[120px]">
-        <div className="grid gap-10 xl:grid-cols-[1fr_220px]">
-          <div className="mx-auto w-full max-w-[var(--container-prose)] xl:mx-0">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_220px] lg:gap-14">
+          <div className="mx-auto w-full max-w-[var(--container-prose)] lg:mx-0">
             <Link
               href={`/writing${post.locale === "vi" ? "?lang=vi" : ""}`}
               className="font-mono text-[13px] text-ink-faint hover:text-ember"
@@ -187,7 +187,7 @@ export default async function WritingPost({
             </article>
           </div>
 
-          <aside className="hidden xl:block">
+          <aside className="hidden lg:block">
             <TableOfContents headings={headings} />
           </aside>
         </div>
