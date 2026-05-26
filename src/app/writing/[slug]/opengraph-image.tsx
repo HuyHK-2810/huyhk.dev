@@ -1,14 +1,14 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getPost, getPostSlugs } from "@/lib/posts";
+import { getAllSlugsAsync, getPostAsync } from "@/lib/posts-db";
 
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export function generateImageMetadata({ params }: { params: { slug: string } }) {
-  const post = getPost(params.slug);
+export async function generateImageMetadata({ params }: { params: { slug: string } }) {
+  const post = await getPostAsync(params.slug);
   return [
     {
       id: "main",
@@ -20,11 +20,12 @@ export function generateImageMetadata({ params }: { params: { slug: string } }) 
 }
 
 export async function generateStaticParams() {
-  return getPostSlugs().map((slug) => ({ slug }));
+  const slugs = await getAllSlugsAsync();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function PostOG({ params }: { params: { slug: string } }) {
-  const post = getPost(params.slug);
+  const post = await getPostAsync(params.slug);
 
   const logoBuffer = await readFile(
     join(process.cwd(), "public/brand/hkh-logo.png"),
@@ -39,7 +40,8 @@ export default async function PostOG({ params }: { params: { slug: string } }) {
         day: "2-digit",
       })
     : "";
-  const tagsLine = post?.tags?.slice(0, 4).join("  ·  ") ?? "react · next · node · python";
+  const tagsLine =
+    post?.tags?.slice(0, 4).join("  ·  ") ?? "react · next · node · python";
   const reading = post?.readingMinutes ? `${post.readingMinutes} min read` : "";
 
   return new ImageResponse(

@@ -4,6 +4,7 @@ import Story from "@/components/brand/story";
 import PullQuote from "@/components/brand/pull-quote";
 import HowIWork from "@/components/brand/how-i-work";
 import Projects from "@/components/brand/projects";
+import Services from "@/components/brand/services";
 import Writing from "@/components/brand/writing";
 import Now from "@/components/brand/now";
 import Newsletter from "@/components/brand/newsletter";
@@ -23,6 +24,7 @@ export default function Home() {
         <PullQuote />
         <HowIWork />
         <Projects />
+        <Services />
         <Writing />
         <Proof />
         <Now />

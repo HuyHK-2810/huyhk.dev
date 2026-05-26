@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPostsAsync } from "@/lib/posts-db";
 import Section, { SectionHeader } from "./section";
 
 function formatDate(iso: string): string {
@@ -13,8 +13,8 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function Writing() {
-  const posts = getAllPosts("en").slice(0, 5);
+export default async function Writing() {
+  const posts = (await getAllPostsAsync("en")).slice(0, 5);
 
   return (
     <Section id="writing">

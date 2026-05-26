@@ -18,8 +18,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid_email" }, { status: 400 });
   }
 
-  const apiKey = process.env.RESEND_API_KEY || 're_gxKw8Xru_CVPDhon6it7QzpthdGY83gWz';
-  const audienceId = process.env.RESEND_AUDIENCE_ID || 'a93e581b-4557-4a0c-9c81-7e3c1838496c';
+  const apiKey = process.env.RESEND_API_KEY;
+  const audienceId = process.env.RESEND_AUDIENCE_ID;
 
   if (!apiKey || !audienceId) {
     // Soft-fail in local/dev: surface a clear message but don't blow up.

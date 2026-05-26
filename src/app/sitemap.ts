@@ -1,22 +1,34 @@
 import type { MetadataRoute } from "next";
-import { getAllPosts, getAllTags } from "@/lib/posts";
+import { getAllPostsAsync, getAllTagsAsync } from "@/lib/posts-db";
+import { caseStudies } from "@/lib/work";
 
 const BASE = "https://huyhk.dev";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: `${BASE}/`, lastModified: now, changeFrequency: "monthly", priority: 1 },
     { url: `${BASE}/writing`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/writing?lang=vi`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
+    { url: `${BASE}/work`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE}/cv`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/pricing/xnkminhphuc`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    ...caseStudies.map((c) => ({
+      url: `${BASE}/work/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "yearly" as const,
+      priority: 0.75,
+    })),
   ];
 
-  const enPosts = getAllPosts("en");
-  const viPosts = getAllPosts("vi");
+  const [enPosts, viPosts, enTags, viTags] = await Promise.all([
+    getAllPostsAsync("en"),
+    getAllPostsAsync("vi"),
+    getAllTagsAsync("en"),
+    getAllTagsAsync("vi"),
+  ]);
 
   const postRoutes: MetadataRoute.Sitemap = [
     ...enPosts.map((p) => ({
@@ -36,7 +48,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   const tagRoutes: MetadataRoute.Sitemap = Array.from(
-    new Set([...getAllTags("en").map((t) => t.tag), ...getAllTags("vi").map((t) => t.tag)]),
+    new Set([...enTags.map((t) => t.tag), ...viTags.map((t) => t.tag)]),
   ).map((tag) => ({
     url: `${BASE}/writing/tags/${encodeURIComponent(tag)}`,
     lastModified: now,

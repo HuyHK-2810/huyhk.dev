@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPostsAsync } from "@/lib/posts-db";
 
 function formatDate(iso: string): string {
   if (!iso) return "";
@@ -12,8 +12,8 @@ function formatDate(iso: string): string {
   });
 }
 
-export default function Proof() {
-  const posts = getAllPosts("en");
+export default async function Proof() {
+  const posts = await getAllPostsAsync("en");
   const latest = posts[0];
   const totalPosts = posts.length;
   const writingSince = posts.length
@@ -24,7 +24,6 @@ export default function Proof() {
     <section className="border-t border-[var(--line-soft)]">
       <div className="mx-auto max-w-[var(--container-wide)] px-6 py-12 md:px-12 md:py-14">
         <div className="grid gap-8 md:grid-cols-[1.4fr_1fr] md:gap-12">
-          {/* Latest post — the showcase tile */}
           {latest && (
             <Link
               href={`/writing/${latest.slug}`}
@@ -59,7 +58,6 @@ export default function Proof() {
             </Link>
           )}
 
-          {/* Stats column */}
           <div className="flex flex-col gap-6">
             <div className="section-label">{`{ in numbers }`}</div>
             <dl className="grid grid-cols-3 gap-x-4 gap-y-6">

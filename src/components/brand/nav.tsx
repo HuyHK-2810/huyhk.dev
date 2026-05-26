@@ -7,10 +7,10 @@ import ThemeToggle from "./theme-toggle";
 
 const links = [
   { href: "/writing", label: "Writing" },
-  { href: "/#projects", label: "Projects" },
-  { href: "/#story", label: "Story" },
+  { href: "/work", label: "Work" },
+  { href: "/#services", label: "Services" },
   { href: "/cv", label: "CV" },
-  { href: "/#contact", label: "Say Hi" },
+  { href: "/#contact", label: "Hire me" },
 ];
 
 export default function Nav() {

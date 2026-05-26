@@ -6,16 +6,16 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
-  getAllPosts,
-  getAllTags,
-} from "@/lib/posts";
+  getAllPostsAsync,
+  getAllTagsAsync,
+} from "@/lib/posts-db";
 
 type Params = { tag: string };
 
-export function generateStaticParams(): Params[] {
+export async function generateStaticParams(): Promise<Params[]> {
   const seen = new Set<string>();
   for (const l of LOCALES) {
-    for (const t of getAllTags(l)) seen.add(t.tag);
+    for (const t of await getAllTagsAsync(l)) seen.add(t.tag);
   }
   return Array.from(seen).map((tag) => ({ tag: encodeURIComponent(tag) }));
 }
@@ -58,7 +58,7 @@ export default async function TagPage({
   const locale = resolveLocale(lang);
   const decoded = decodeURIComponent(tag);
 
-  const all = getAllPosts(locale);
+  const all = await getAllPostsAsync(locale);
   const posts = all.filter((p) => p.tags.includes(decoded));
   if (posts.length === 0) notFound();
 

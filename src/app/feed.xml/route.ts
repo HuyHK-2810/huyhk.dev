@@ -1,4 +1,4 @@
-import { getAllPosts } from "@/lib/posts";
+import { getAllPostsAsync } from "@/lib/posts-db";
 
 const BASE = "https://huyhk.dev";
 
@@ -12,12 +12,18 @@ function escape(input: string | undefined): string {
     .replace(/'/g, "&apos;");
 }
 
-export const dynamic = "force-static";
+export const revalidate = 3600;
 
-export function GET() {
-  // RSS includes posts in their primary locale only — we don't want duplicate
-  // entries for bilingual posts.
-  const all = [...getAllPosts("en"), ...getAllPosts("vi").filter((p) => !p.availableLocales.includes("en"))];
+export async function GET() {
+  const [enPosts, viPosts] = await Promise.all([
+    getAllPostsAsync("en"),
+    getAllPostsAsync("vi"),
+  ]);
+
+  const all = [
+    ...enPosts,
+    ...viPosts.filter((p) => !p.availableLocales.includes("en")),
+  ];
   all.sort((a, b) => (a.date < b.date ? 1 : -1));
 
   const lastBuild = new Date().toUTCString();

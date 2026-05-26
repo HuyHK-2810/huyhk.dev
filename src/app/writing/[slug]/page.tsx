@@ -9,19 +9,22 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
-  getAdjacentPosts,
-  getPost,
-  getPostFilename,
-  getPostSlugs,
-  getRelatedPosts,
-} from "@/lib/posts";
+  getAdjacentAsync,
+  getAllSlugsAsync,
+  getPostAsync,
+  getRelatedAsync,
+} from "@/lib/posts-db";
+import { getPostFilename } from "@/lib/posts";
 import { getHeadings } from "@/lib/toc";
+import { extractHeadings, renderMarkdown } from "@/lib/markdown";
+import { isSupabaseConfigured } from "@/lib/supabase";
 
 type Params = { slug: string };
 type Search = { lang?: string };
 
-export function generateStaticParams(): Params[] {
-  return getPostSlugs().map((slug) => ({ slug }));
+export async function generateStaticParams(): Promise<Params[]> {
+  const slugs = await getAllSlugsAsync();
+  return slugs.map((slug) => ({ slug }));
 }
 
 function resolveLocale(input: string | undefined): Locale {
@@ -40,7 +43,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const { lang } = await searchParams;
   const locale = resolveLocale(lang);
-  const post = getPost(slug, locale);
+  const post = await getPostAsync(slug, locale);
   if (!post) return { title: "Not found — huyHK" };
   const url = `/writing/${slug}${locale === "vi" ? "?lang=vi" : ""}`;
   return {
@@ -82,22 +85,32 @@ export default async function WritingPost({
   const { lang } = await searchParams;
   const locale = resolveLocale(lang);
 
-  const post = getPost(slug, locale);
+  const post = await getPostAsync(slug, locale);
   if (!post) notFound();
 
-  const filename = getPostFilename(slug, post.locale);
-  if (!filename) notFound();
+  // Branch: DB-sourced posts have body inline; file-sourced posts dynamically import MDX.
+  const sourcedFromDb = isSupabaseConfigured() && post.body.length > 0;
 
-  let Body: React.ComponentType;
-  try {
-    Body = (await import(`@/content/posts/${filename}`)).default;
-  } catch {
-    notFound();
+  let renderedHtml: string | null = null;
+  let MdxBody: React.ComponentType | null = null;
+  let headings: { depth: 2 | 3; text: string; id: string }[] = [];
+
+  if (sourcedFromDb) {
+    renderedHtml = await renderMarkdown(post.body);
+    headings = extractHeadings(post.body);
+  } else {
+    const filename = getPostFilename(slug, post.locale);
+    if (!filename) notFound();
+    try {
+      MdxBody = (await import(`@/content/posts/${filename}`)).default;
+    } catch {
+      notFound();
+    }
+    headings = getHeadings(filename);
   }
 
-  const headings = getHeadings(filename);
-  const related = getRelatedPosts(slug, post.locale);
-  const { prev, next } = getAdjacentPosts(slug, post.locale);
+  const related = await getRelatedAsync(slug, post.locale);
+  const { prev, next } = await getAdjacentAsync(slug, post.locale);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -155,7 +168,14 @@ export default async function WritingPost({
               )}
 
               <div className="prose-body mt-10">
-                <Body />
+                {renderedHtml ? (
+                  <div
+                    className="prose-body"
+                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                  />
+                ) : MdxBody ? (
+                  <MdxBody />
+                ) : null}
               </div>
 
               <PostFooter
@@ -181,4 +201,3 @@ export default async function WritingPost({
     </>
   );
 }
-

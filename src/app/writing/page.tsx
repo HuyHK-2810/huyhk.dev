@@ -5,9 +5,9 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
-  getAllPosts,
-  getAllTags,
-} from "@/lib/posts";
+  getAllPostsAsync,
+  getAllTagsAsync,
+} from "@/lib/posts-db";
 
 function formatDate(iso: string, locale: Locale): string {
   if (!iso) return "";
@@ -45,8 +45,10 @@ export default async function WritingIndex({
   const { lang } = await searchParams;
   const locale = resolveLocale(lang);
 
-  const posts = getAllPosts(locale);
-  const tags = getAllTags(locale);
+  const [posts, tags] = await Promise.all([
+    getAllPostsAsync(locale),
+    getAllTagsAsync(locale),
+  ]);
 
   const labels =
     locale === "vi"
@@ -56,7 +58,6 @@ export default async function WritingIndex({
           title1: "Ghi chú tôi đang ",
           titleAccent: "viết",
           title2: ".",
-          tagsLabel: "lọc theo chủ đề",
           allTags: "tất cả",
           rss: "RSS",
           minutes: "phút",
@@ -67,7 +68,6 @@ export default async function WritingIndex({
           title1: "Notes I’m ",
           titleAccent: "working on",
           title2: ".",
-          tagsLabel: "filter by tag",
           allTags: "all",
           rss: "RSS",
           minutes: "min",
