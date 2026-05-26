@@ -2,19 +2,27 @@ import { unstable_cache } from "next/cache";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { getSupabaseRead, isSupabaseConfigured } from "@/lib/supabase";
-import {
-  DEFAULT_LOCALE,
-  LOCALES,
-  type Locale,
-  type PostMeta,
-  getAllPosts as getFilePosts,
-  getAllTags as getFileTags,
-} from "./posts";
 import { computeReadingStats } from "./markdown";
 
 /** Cache tags used to invalidate the unstable_cache layer below. */
 export const POSTS_CACHE_TAG = "posts";
 export const POSTS_CACHE_REVALIDATE_SECONDS = 60;
+
+export type Locale = "en" | "vi";
+export const LOCALES: Locale[] = ["en", "vi"];
+export const DEFAULT_LOCALE: Locale = "en";
+
+export type PostMeta = {
+  slug: string;
+  title: string;
+  date: string;
+  excerpt?: string;
+  tags: string[];
+  locale: Locale;
+  availableLocales: Locale[];
+  readingMinutes: number;
+  wordCount: number;
+};
 
 export type DBPostRow = {
   id: string;
@@ -71,9 +79,9 @@ function rowToMeta(row: DBPostRow, availableLocales: Locale[]): DBPost {
 }
 
 /**
- * Fetch all published posts. Drizzle first (when DATABASE_URL is set),
- * Supabase REST as fallback. Empty array on any error → caller falls back
- * to MDX files.
+ * Fetch published posts. Drizzle (direct Postgres) is preferred; Supabase REST
+ * is the fallback when DATABASE_URL is missing. Returns an empty array on any
+ * error so callers degrade to empty rather than crashing.
  */
 async function fetchAllPublishedRowsUncached(): Promise<DBPostRow[]> {
   const db = getDb();
@@ -110,49 +118,36 @@ async function fetchAllPublishedRowsUncached(): Promise<DBPostRow[]> {
   return (data as DBPostRow[]) ?? [];
 }
 
-/**
- * Cached for 60s + tagged `posts`. Admin mutations call
- * `revalidateTag('posts')` to invalidate. The cache lives across requests on
- * the same server instance, so a hot page costs zero DB roundtrips after the
- * first hit.
- */
+/** Cached for 60s + tagged `posts`. Admin mutations call `revalidateTag`. */
 const fetchAllPublishedRows = unstable_cache(
   fetchAllPublishedRowsUncached,
   ["posts:all-published"],
   { revalidate: POSTS_CACHE_REVALIDATE_SECONDS, tags: [POSTS_CACHE_TAG] },
 );
 
-function filePostsToDbShape(locale: Locale): DBPost[] {
-  return getFilePosts(locale).map((p) => ({ ...p, id: p.slug, body: "" }));
-}
+export async function getAllPostsAsync(
+  locale: Locale = DEFAULT_LOCALE,
+): Promise<DBPost[]> {
+  if (!isSupabaseConfigured()) return [];
 
-export async function getAllPostsAsync(locale: Locale = DEFAULT_LOCALE): Promise<DBPost[]> {
-  const dbRows = isSupabaseConfigured() ? await fetchAllPublishedRows() : [];
+  const rows = await fetchAllPublishedRows();
 
+  // Group by slug so each post knows which locales are available.
   const bySlug = new Map<string, Map<Locale, DBPostRow>>();
-  for (const r of dbRows) {
+  for (const r of rows) {
     if (!bySlug.has(r.slug)) bySlug.set(r.slug, new Map());
     bySlug.get(r.slug)!.set(r.locale, r);
   }
 
-  const dbPosts: DBPost[] = [];
-  const dbSlugLocaleKey = new Set<string>();
-  for (const [slugKey, perLocale] of bySlug) {
+  const posts: DBPost[] = [];
+  for (const [, perLocale] of bySlug) {
     const available = Array.from(perLocale.keys());
-    for (const localeKey of perLocale.keys()) {
-      dbSlugLocaleKey.add(`${slugKey}::${localeKey}`);
-    }
     const row = perLocale.get(locale) ?? perLocale.get(DEFAULT_LOCALE);
-    if (row) dbPosts.push(rowToMeta(row, available));
+    if (row) posts.push(rowToMeta(row, available));
   }
 
-  const filePosts = filePostsToDbShape(locale).filter(
-    (p) => !dbSlugLocaleKey.has(`${p.slug}::${p.locale}`),
-  );
-
-  const merged = [...dbPosts, ...filePosts];
-  merged.sort((a, b) => (a.date < b.date ? 1 : -1));
-  return merged;
+  posts.sort((a, b) => (a.date < b.date ? 1 : -1));
+  return posts;
 }
 
 export async function getPostAsync(
@@ -178,7 +173,6 @@ export async function getAllTagsAsync(
   locale: Locale = DEFAULT_LOCALE,
 ): Promise<{ tag: string; count: number }[]> {
   const posts = await getAllPostsAsync(locale);
-  if (posts.length === 0) return getFileTags(locale);
   const counts = new Map<string, number>();
   for (const p of posts) for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
   return Array.from(counts.entries())
@@ -243,6 +237,3 @@ export async function listAllPostsForAdmin(opts?: {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(schema.posts.updatedAt));
 }
-
-export { LOCALES, DEFAULT_LOCALE };
-export type { Locale, PostMeta };

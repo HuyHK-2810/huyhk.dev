@@ -14,10 +14,7 @@ import {
   getPostAsync,
   getRelatedAsync,
 } from "@/features/blog/lib/posts-db";
-import { getPostFilename } from "@/features/blog/lib/posts";
-import { getHeadings } from "@/features/blog/lib/toc";
 import { extractHeadings, renderMarkdown } from "@/features/blog/lib/markdown";
-import { isSupabaseConfigured } from "@/lib/supabase";
 
 type Params = { slug: string };
 type Search = { lang?: string };
@@ -88,26 +85,8 @@ export default async function WritingPost({
   const post = await getPostAsync(slug, locale);
   if (!post) notFound();
 
-  // Branch: DB-sourced posts have body inline; file-sourced posts dynamically import MDX.
-  const sourcedFromDb = isSupabaseConfigured() && post.body.length > 0;
-
-  let renderedHtml: string | null = null;
-  let MdxBody: React.ComponentType | null = null;
-  let headings: { depth: 2 | 3; text: string; id: string }[] = [];
-
-  if (sourcedFromDb) {
-    renderedHtml = await renderMarkdown(post.body);
-    headings = extractHeadings(post.body);
-  } else {
-    const filename = getPostFilename(slug, post.locale);
-    if (!filename) notFound();
-    try {
-      MdxBody = (await import(`@/content/posts/${filename}`)).default;
-    } catch {
-      notFound();
-    }
-    headings = getHeadings(filename);
-  }
+  const renderedHtml = await renderMarkdown(post.body);
+  const headings = extractHeadings(post.body);
 
   const related = await getRelatedAsync(slug, post.locale);
   const { prev, next } = await getAdjacentAsync(slug, post.locale);
@@ -167,16 +146,10 @@ export default async function WritingPost({
                 </p>
               )}
 
-              <div className="prose-body mt-10">
-                {renderedHtml ? (
-                  <div
-                    className="prose-body"
-                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
-                  />
-                ) : MdxBody ? (
-                  <MdxBody />
-                ) : null}
-              </div>
+              <div
+                className="prose-body mt-10"
+                dangerouslySetInnerHTML={{ __html: renderedHtml }}
+              />
 
               <PostFooter
                 prev={prev}

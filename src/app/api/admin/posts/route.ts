@@ -18,6 +18,31 @@ async function authorize(req: Request): Promise<boolean> {
 const ALLOWED_STATUS = new Set(["draft", "published", "archived"] as const);
 const ALLOWED_LOCALE = new Set(["en", "vi"] as const);
 
+/**
+ * Whitelist for `?fields=` sparse-fieldset projection. API uses snake_case;
+ * Drizzle rows are camelCase, so we keep both names mapped.
+ *
+ * Body is intentionally excluded — it's heavy and the lightweight list
+ * endpoint shouldn't ship full post content. Use GET /api/admin/posts/[id]
+ * for the full row.
+ */
+const FIELD_MAP: Record<string, keyof typeof schema.posts.$inferSelect> = {
+  id: "id",
+  slug: "slug",
+  locale: "locale",
+  title: "title",
+  excerpt: "excerpt",
+  tags: "tags",
+  status: "status",
+  date: "date",
+  word_count: "wordCount",
+  reading_minutes: "readingMinutes",
+  published_at: "publishedAt",
+  updated_at: "updatedAt",
+  created_at: "createdAt",
+};
+const ALLOWED_FIELDS = new Set(Object.keys(FIELD_MAP));
+
 type CreateBody = {
   slug?: string;
   locale?: string;
@@ -49,6 +74,31 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
   const locale = url.searchParams.get("locale");
+  const fieldsParam = url.searchParams.get("fields");
+
+  // Parse + validate `fields` if present.
+  let projection: string[] | null = null;
+  if (fieldsParam) {
+    const requested = fieldsParam
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const invalid = requested.filter((f) => !ALLOWED_FIELDS.has(f));
+    if (invalid.length > 0) {
+      return NextResponse.json(
+        {
+          error: "invalid_fields",
+          invalid,
+          allowed: Array.from(ALLOWED_FIELDS).sort(),
+        },
+        { status: 400 },
+      );
+    }
+    if (requested.length === 0) {
+      return NextResponse.json({ error: "empty_fields" }, { status: 400 });
+    }
+    projection = requested;
+  }
 
   const rows = await listAllPostsForAdmin({
     status:
@@ -61,7 +111,22 @@ export async function GET(req: Request) {
         : undefined,
   });
 
-  return NextResponse.json({ posts: rows });
+  if (!projection) {
+    return NextResponse.json({ posts: rows });
+  }
+
+  // Project columns down to the requested fields, preserving the snake_case
+  // names the API uses (callers asked for those names, return them as-is).
+  const projected = rows.map((row) => {
+    const out: Record<string, unknown> = {};
+    for (const apiField of projection!) {
+      const dbField = FIELD_MAP[apiField];
+      out[apiField] = row[dbField];
+    }
+    return out;
+  });
+
+  return NextResponse.json({ posts: projected, count: projected.length });
 }
 
 export async function POST(req: Request) {

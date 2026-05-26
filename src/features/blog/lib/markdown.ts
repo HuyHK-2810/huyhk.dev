@@ -41,9 +41,11 @@ export async function renderMarkdown(body: string): Promise<string> {
   return String(file);
 }
 
+export type Heading = { depth: 2 | 3; text: string; id: string };
+
 /** Pull h2/h3 headings + slugified ids from a markdown body. */
-export function extractHeadings(body: string): { depth: 2 | 3; text: string; id: string }[] {
-  const headings: { depth: 2 | 3; text: string; id: string }[] = [];
+export function extractHeadings(body: string): Heading[] {
+  const headings: Heading[] = [];
   let inCode = false;
   for (const rawLine of body.split("\n")) {
     const line = rawLine.replace(/\r$/, "");

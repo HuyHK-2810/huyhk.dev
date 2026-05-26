@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Heading } from "@/features/blog/lib/toc";
+import type { Heading } from "@/features/blog/lib/markdown";
 
 type Props = { headings: Heading[] };
 
