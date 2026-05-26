@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getCurrentProfile } from "@/lib/supabase/server";
 
 const COOKIE_NAME = "hk_admin";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7; // 1 week
@@ -7,7 +8,11 @@ export function getAdminToken(): string | null {
   return process.env.ADMIN_TOKEN ?? null;
 }
 
-/** Used by Bearer-token API auth (e.g. AI calling /api/admin/posts). */
+/**
+ * Bearer-token auth for API consumers (AI agents, scripts). Token comes from
+ * `ADMIN_TOKEN` env. Kept independent of Supabase Auth because agents can't
+ * "sign in" — they need a long-lived shared secret.
+ */
 export function verifyBearer(req: Request): boolean {
   const token = getAdminToken();
   if (!token) return false;
@@ -17,8 +22,24 @@ export function verifyBearer(req: Request): boolean {
   return constantTimeEqual(m[1], token);
 }
 
-/** Used by cookie-based session for the /admin UI. */
+/**
+ * Cookie/session auth for /admin UI. Two acceptable paths:
+ *
+ *   1) Supabase Auth — the signed-in user has `role='admin'` in profiles.
+ *      This is the path real humans should use.
+ *   2) Legacy ADMIN_TOKEN cookie — keeps the original password gate working
+ *      during the migration window. Remove once an admin profile exists.
+ */
 export async function verifySessionCookie(): Promise<boolean> {
+  // Try Supabase Auth first.
+  try {
+    const profile = await getCurrentProfile();
+    if (profile && profile.role === "admin") return true;
+  } catch {
+    // fall through to legacy check
+  }
+
+  // Legacy ADMIN_TOKEN path.
   const token = getAdminToken();
   if (!token) return false;
   const store = await cookies();

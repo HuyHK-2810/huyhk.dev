@@ -1,4 +1,4 @@
-import { getAllPostsAsync } from "@/lib/posts-db";
+import { getAllPostsAsync } from "@/features/blog/lib/posts-db";
 
 const BASE = "https://huyhk.dev";
 

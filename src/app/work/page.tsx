@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Nav from "@/components/brand/nav";
 import Footer from "@/components/brand/footer";
-import { getAllCaseStudies } from "@/lib/work";
+import { getAllCaseStudies } from "@/features/work/lib/work";
 
 export const metadata = {
   title: "Work — huyHK",

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/admin-shell";
-import PostEditor from "@/components/admin/post-editor";
-import { verifySessionCookie } from "@/lib/admin-auth";
+import AdminShell from "@/features/admin/components/admin-shell";
+import PostEditor from "@/features/admin/components/post-editor";
+import { verifySessionCookie } from "@/features/admin/lib/auth";
 
 export default async function NewPostPage() {
   const session = await verifySessionCookie();

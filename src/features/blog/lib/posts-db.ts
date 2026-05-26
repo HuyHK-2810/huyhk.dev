@@ -1,3 +1,6 @@
+import { and, desc, eq } from "drizzle-orm";
+import { getDb, schema } from "@/lib/db";
+import { getSupabaseRead, isSupabaseConfigured } from "@/lib/supabase";
 import {
   DEFAULT_LOCALE,
   LOCALES,
@@ -6,7 +9,6 @@ import {
   getAllPosts as getFilePosts,
   getAllTags as getFileTags,
 } from "./posts";
-import { getSupabaseRead, isSupabaseConfigured } from "./supabase";
 import { computeReadingStats } from "./markdown";
 
 export type DBPostRow = {
@@ -25,6 +27,23 @@ export type DBPostRow = {
 };
 
 export type DBPost = PostMeta & { body: string; id: string };
+
+function dbRowFromDrizzle(row: schema.Post): DBPostRow {
+  return {
+    id: row.id,
+    slug: row.slug,
+    locale: row.locale,
+    title: row.title,
+    excerpt: row.excerpt,
+    body: row.body,
+    tags: row.tags,
+    status: row.status,
+    date: row.date ? row.date.toISOString() : null,
+    word_count: row.wordCount,
+    reading_minutes: row.readingMinutes,
+    published_at: row.publishedAt ? row.publishedAt.toISOString() : null,
+  };
+}
 
 function rowToMeta(row: DBPostRow, availableLocales: Locale[]): DBPost {
   const stats =
@@ -46,7 +65,28 @@ function rowToMeta(row: DBPostRow, availableLocales: Locale[]): DBPost {
   };
 }
 
+/**
+ * Fetch all published posts. Drizzle first (when DATABASE_URL is set),
+ * Supabase REST as fallback. Empty array on any error → caller falls back
+ * to MDX files.
+ */
 async function fetchAllPublishedRows(): Promise<DBPostRow[]> {
+  const db = getDb();
+  if (db) {
+    try {
+      const rows = await db
+        .select()
+        .from(schema.posts)
+        .where(eq(schema.posts.status, "published"))
+        .orderBy(desc(schema.posts.publishedAt));
+      return rows.map(dbRowFromDrizzle);
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[posts-db] Drizzle read failed, trying Supabase REST:", err);
+      }
+    }
+  }
+
   const supa = getSupabaseRead();
   if (!supa) return [];
   const { data, error } = await supa
@@ -57,11 +97,8 @@ async function fetchAllPublishedRows(): Promise<DBPostRow[]> {
     .eq("status", "published")
     .order("published_at", { ascending: false });
   if (error) {
-    // Table missing, schema-cache miss, or any other read failure — fall back
-    // to MDX silently. Logged in case it's a real outage rather than a
-    // migration-in-progress state.
     if (process.env.NODE_ENV !== "production") {
-      console.warn("[posts-db] DB read failed, falling back to MDX:", error.message);
+      console.warn("[posts-db] Supabase REST read failed:", error.message);
     }
     return [];
   }
@@ -72,19 +109,9 @@ function filePostsToDbShape(locale: Locale): DBPost[] {
   return getFilePosts(locale).map((p) => ({ ...p, id: p.slug, body: "" }));
 }
 
-/**
- * All published posts in the requested locale. Sources, in order:
- *   1. Supabase rows (status=published)
- *   2. MDX files in src/content/posts
- *
- * Sources are merged and de-duplicated by (slug, locale) — Supabase wins.
- * This means: during migration, file posts still show; once a slug is in DB,
- * the DB version replaces the file version automatically.
- */
 export async function getAllPostsAsync(locale: Locale = DEFAULT_LOCALE): Promise<DBPost[]> {
   const dbRows = isSupabaseConfigured() ? await fetchAllPublishedRows() : [];
 
-  // Group DB rows by slug to compute availableLocales correctly.
   const bySlug = new Map<string, Map<Locale, DBPostRow>>();
   for (const r of dbRows) {
     if (!bySlug.has(r.slug)) bySlug.set(r.slug, new Map());
@@ -120,7 +147,6 @@ export async function getPostAsync(
 }
 
 export async function getAllSlugsAsync(): Promise<string[]> {
-  // Union of DB slugs and file slugs (both locales).
   const slugs = new Set<string>();
   const [en, vi] = await Promise.all([
     getAllPostsAsync("en"),
@@ -135,9 +161,7 @@ export async function getAllTagsAsync(
   locale: Locale = DEFAULT_LOCALE,
 ): Promise<{ tag: string; count: number }[]> {
   const posts = await getAllPostsAsync(locale);
-  if (posts.length === 0) {
-    return getFileTags(locale);
-  }
+  if (posts.length === 0) return getFileTags(locale);
   const counts = new Map<string, number>();
   for (const p of posts) for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
   return Array.from(counts.entries())
@@ -175,6 +199,32 @@ export async function getAdjacentAsync(
     next: idx > 0 ? all[idx - 1] : null,
     prev: idx < all.length - 1 ? all[idx + 1] : null,
   };
+}
+
+/** Admin: list all posts (drafts included), Drizzle preferred. */
+export async function listAllPostsForAdmin(opts?: {
+  status?: "draft" | "published" | "archived";
+  locale?: Locale;
+}): Promise<schema.Post[]> {
+  const db = getDb();
+  if (!db) {
+    const supa = getSupabaseRead();
+    if (!supa) return [];
+    let q = supa.from("posts").select("*").order("updated_at", { ascending: false });
+    if (opts?.status) q = q.eq("status", opts.status);
+    if (opts?.locale) q = q.eq("locale", opts.locale);
+    const { data } = await q;
+    return ((data ?? []) as unknown) as schema.Post[];
+  }
+  const conditions = [
+    opts?.status ? eq(schema.posts.status, opts.status) : undefined,
+    opts?.locale ? eq(schema.posts.locale, opts.locale) : undefined,
+  ].filter((c) => c !== undefined);
+  return await db
+    .select()
+    .from(schema.posts)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(schema.posts.updatedAt));
 }
 
 export { LOCALES, DEFAULT_LOCALE };

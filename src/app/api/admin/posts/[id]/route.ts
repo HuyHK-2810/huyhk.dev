@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { verifyBearer, verifySessionCookie } from "@/lib/admin-auth";
-import { computeReadingStats } from "@/lib/markdown";
+import { eq } from "drizzle-orm";
+import { getDb, schema } from "@/lib/db";
+import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
+import { computeReadingStats } from "@/features/blog/lib/markdown";
 
 export const runtime = "nodejs";
 
@@ -22,17 +23,13 @@ export async function GET(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supa = getSupabaseAdmin();
-  if (!supa) {
-    return NextResponse.json({ error: "supabase_not_configured" }, { status: 503 });
-  }
+  const db = getDb();
+  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+
   const { id } = await params;
-  const { data, error } = await supa.from("posts").select("*").eq("id", id).single();
-  if (error) {
-    const code = error.code === "PGRST116" ? 404 : 500;
-    return NextResponse.json({ error: error.message }, { status: code });
-  }
-  return NextResponse.json({ post: data });
+  const [row] = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
+  if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  return NextResponse.json({ post: row });
 }
 
 export async function PATCH(
@@ -42,10 +39,9 @@ export async function PATCH(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supa = getSupabaseAdmin();
-  if (!supa) {
-    return NextResponse.json({ error: "supabase_not_configured" }, { status: 503 });
-  }
+  const db = getDb();
+  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+
   const { id } = await params;
 
   let body: Record<string, unknown>;
@@ -55,36 +51,40 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
-  const update: Record<string, unknown> = {};
+  const update: Partial<typeof schema.posts.$inferInsert> = {};
 
   if (typeof body.title === "string") update.title = body.title.trim();
   if (typeof body.slug === "string") update.slug = String(body.slug).trim();
-  if (typeof body.excerpt === "string" || body.excerpt === null) update.excerpt = body.excerpt;
+  if (typeof body.excerpt === "string" || body.excerpt === null) {
+    update.excerpt = body.excerpt as string | null;
+  }
   if (typeof body.body === "string") {
     update.body = body.body;
     const stats = computeReadingStats(body.body);
-    update.word_count = stats.wordCount;
-    update.reading_minutes = stats.readingMinutes;
+    update.wordCount = stats.wordCount;
+    update.readingMinutes = stats.readingMinutes;
   }
   if (Array.isArray(body.tags)) update.tags = (body.tags as unknown[]).map(String);
-  if (typeof body.date === "string") update.date = body.date;
+  if (typeof body.date === "string") update.date = new Date(body.date);
 
   if (typeof body.locale === "string") {
     if (!ALLOWED_LOCALE.has(body.locale as never)) {
       return NextResponse.json({ error: "invalid_locale" }, { status: 400 });
     }
-    update.locale = body.locale;
+    update.locale = body.locale as "en" | "vi";
   }
 
   if (typeof body.status === "string") {
     if (!ALLOWED_STATUS.has(body.status as never)) {
       return NextResponse.json({ error: "invalid_status" }, { status: 400 });
     }
-    update.status = body.status;
+    update.status = body.status as "draft" | "published" | "archived";
     if (body.status === "published") {
-      update.published_at = body.published_at ?? new Date().toISOString();
+      update.publishedAt = body.published_at
+        ? new Date(body.published_at as string)
+        : new Date();
     } else if (body.status === "draft") {
-      update.published_at = null;
+      update.publishedAt = null;
     }
   }
 
@@ -92,19 +92,19 @@ export async function PATCH(
     return NextResponse.json({ error: "nothing_to_update" }, { status: 400 });
   }
 
-  const { data, error } = await supa
-    .from("posts")
-    .update(update)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    const code = error.code === "23505" ? 409 : 500;
-    return NextResponse.json({ error: error.message }, { status: code });
+  try {
+    const [row] = await db
+      .update(schema.posts)
+      .set(update)
+      .where(eq(schema.posts.id, id))
+      .returning();
+    if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    return NextResponse.json({ post: row });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "update_failed";
+    const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
+    return NextResponse.json({ error: message }, { status: code });
   }
-
-  return NextResponse.json({ post: data });
 }
 
 export async function DELETE(
@@ -114,12 +114,10 @@ export async function DELETE(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supa = getSupabaseAdmin();
-  if (!supa) {
-    return NextResponse.json({ error: "supabase_not_configured" }, { status: 503 });
-  }
+  const db = getDb();
+  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+
   const { id } = await params;
-  const { error } = await supa.from("posts").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await db.delete(schema.posts).where(eq(schema.posts.id, id));
   return NextResponse.json({ ok: true });
 }

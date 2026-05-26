@@ -2,9 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/brand/nav";
 import Footer from "@/components/brand/footer";
-import PostMeta from "@/components/writing/post-meta";
-import PostFooter from "@/components/writing/post-footer";
-import TableOfContents from "@/components/writing/toc";
+import PostMeta from "@/features/blog/components/post-meta";
+import PostFooter from "@/features/blog/components/post-footer";
+import TableOfContents from "@/features/blog/components/toc";
 import {
   DEFAULT_LOCALE,
   LOCALES,
@@ -13,10 +13,10 @@ import {
   getAllSlugsAsync,
   getPostAsync,
   getRelatedAsync,
-} from "@/lib/posts-db";
-import { getPostFilename } from "@/lib/posts";
-import { getHeadings } from "@/lib/toc";
-import { extractHeadings, renderMarkdown } from "@/lib/markdown";
+} from "@/features/blog/lib/posts-db";
+import { getPostFilename } from "@/features/blog/lib/posts";
+import { getHeadings } from "@/features/blog/lib/toc";
+import { extractHeadings, renderMarkdown } from "@/features/blog/lib/markdown";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 type Params = { slug: string };

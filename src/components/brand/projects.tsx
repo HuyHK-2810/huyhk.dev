@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllCaseStudies } from "@/lib/work";
+import { getAllCaseStudies } from "@/features/work/lib/work";
 import Section, { SectionHeader } from "./section";
 
 export default function Projects() {

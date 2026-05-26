@@ -8,7 +8,7 @@ import {
   type Locale,
   getAllPostsAsync,
   getAllTagsAsync,
-} from "@/lib/posts-db";
+} from "@/features/blog/lib/posts-db";
 
 type Params = { tag: string };
 

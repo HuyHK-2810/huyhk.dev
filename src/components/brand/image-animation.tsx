@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { memo } from "react";
-import { PORTRAIT_PATH } from "@/lib/portrait-paths";
+import { PORTRAIT_PATH } from "@/features/cv/lib/portrait-paths";
 
 type ImageAnimationProps = {
   className?: string;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Locale } from "@/lib/posts";
+import type { Locale } from "@/features/blog/lib/posts";
 
 type Props = {
   date: string;

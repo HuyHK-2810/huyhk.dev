@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation";
-import AdminShell from "@/components/admin/admin-shell";
-import PostEditor from "@/components/admin/post-editor";
-import { verifySessionCookie } from "@/lib/admin-auth";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import { eq } from "drizzle-orm";
+import AdminShell from "@/features/admin/components/admin-shell";
+import PostEditor from "@/features/admin/components/post-editor";
+import { verifySessionCookie } from "@/features/admin/lib/auth";
+import { getDb, schema } from "@/lib/db";
 
 type Params = { id: string };
 
@@ -15,19 +16,19 @@ export default async function EditPostPage({
   if (!session) redirect("/admin/login");
 
   const { id } = await params;
-  const supa = getSupabaseAdmin();
-  if (!supa) {
+  const db = getDb();
+  if (!db) {
     return (
       <AdminShell>
         <p className="font-mono text-[13px] text-[#C24A1F]">
-          Supabase not configured.
+          DATABASE_URL not configured.
         </p>
       </AdminShell>
     );
   }
 
-  const { data, error } = await supa.from("posts").select("*").eq("id", id).single();
-  if (error || !data) notFound();
+  const [row] = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
+  if (!row) notFound();
 
   return (
     <AdminShell>
@@ -36,7 +37,7 @@ export default async function EditPostPage({
           Edit post
         </h1>
         <a
-          href={`/writing/${data.slug}${data.locale === "vi" ? "?lang=vi" : ""}`}
+          href={`/writing/${row.slug}${row.locale === "vi" ? "?lang=vi" : ""}`}
           target="_blank"
           rel="noreferrer"
           className="font-mono text-[12px] text-ink-soft hover:text-ember"
@@ -48,15 +49,15 @@ export default async function EditPostPage({
         <PostEditor
           mode="edit"
           initial={{
-            id: data.id,
-            slug: data.slug,
-            locale: data.locale,
-            title: data.title,
-            excerpt: data.excerpt ?? "",
-            body: data.body ?? "",
-            tagsCsv: (data.tags ?? []).join(", "),
-            status: data.status,
-            date: data.date ?? new Date().toISOString(),
+            id: row.id,
+            slug: row.slug,
+            locale: row.locale,
+            title: row.title,
+            excerpt: row.excerpt ?? "",
+            body: row.body ?? "",
+            tagsCsv: (row.tags ?? []).join(", "),
+            status: row.status,
+            date: row.date ? row.date.toISOString() : new Date().toISOString(),
           }}
         />
       </div>

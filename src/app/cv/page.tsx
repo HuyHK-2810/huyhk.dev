@@ -8,7 +8,7 @@ import {
   education,
   certifications,
   skills,
-} from "@/lib/cv";
+} from "@/features/cv/lib/cv";
 
 export const metadata = {
   title: "CV — huyHK",

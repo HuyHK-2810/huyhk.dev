@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getAllPostsAsync, getAllTagsAsync } from "@/lib/posts-db";
-import { caseStudies } from "@/lib/work";
+import { getAllPostsAsync, getAllTagsAsync } from "@/features/blog/lib/posts-db";
+import { caseStudies } from "@/features/work/lib/work";
 
 const BASE = "https://huyhk.dev";
 

@@ -7,7 +7,7 @@ import {
   type Locale,
   getAllPostsAsync,
   getAllTagsAsync,
-} from "@/lib/posts-db";
+} from "@/features/blog/lib/posts-db";
 
 function formatDate(iso: string, locale: Locale): string {
   if (!iso) return "";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAllPostsAsync } from "@/lib/posts-db";
+import { getAllPostsAsync } from "@/features/blog/lib/posts-db";
 
 function formatDate(iso: string): string {
   if (!iso) return "";

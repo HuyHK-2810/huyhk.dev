@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabase";
-import { verifyBearer, verifySessionCookie } from "@/lib/admin-auth";
-import { computeReadingStats } from "@/lib/markdown";
+import { getDb, schema, isDbConfigured } from "@/lib/db";
+import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
+import { computeReadingStats } from "@/features/blog/lib/markdown";
+import { listAllPostsForAdmin } from "@/features/blog/lib/posts-db";
 
 export const runtime = "nodejs";
 
@@ -40,42 +41,35 @@ export async function GET(req: Request) {
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supa = getSupabaseAdmin();
-  if (!supa) {
-    return NextResponse.json(
-      { error: "supabase_not_configured" },
-      { status: 503 },
-    );
-  }
+
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
   const locale = url.searchParams.get("locale");
 
-  let query = supa
-    .from("posts")
-    .select(
-      "id, slug, locale, title, excerpt, tags, status, date, published_at, word_count, reading_minutes, updated_at",
-    )
-    .order("updated_at", { ascending: false });
+  const rows = await listAllPostsForAdmin({
+    status:
+      status && ALLOWED_STATUS.has(status as never)
+        ? (status as "draft" | "published" | "archived")
+        : undefined,
+    locale:
+      locale && ALLOWED_LOCALE.has(locale as never)
+        ? (locale as "en" | "vi")
+        : undefined,
+  });
 
-  if (status && ALLOWED_STATUS.has(status as never)) query = query.eq("status", status);
-  if (locale && ALLOWED_LOCALE.has(locale as never)) query = query.eq("locale", locale);
-
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ posts: data ?? [] });
+  return NextResponse.json({ posts: rows });
 }
 
 export async function POST(req: Request) {
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supa = getSupabaseAdmin();
-  if (!supa) {
-    return NextResponse.json(
-      { error: "supabase_not_configured" },
-      { status: 503 },
-    );
+  if (!isDbConfigured()) {
+    return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+  }
+  const db = getDb();
+  if (!db) {
+    return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
   }
 
   let body: CreateBody;
@@ -108,32 +102,30 @@ export async function POST(req: Request) {
   const tags = Array.isArray(body.tags) ? body.tags.map(String) : [];
   const date = body.date ?? new Date().toISOString();
   const publishedAt =
-    status === "published"
-      ? body.published_at ?? new Date().toISOString()
-      : null;
+    status === "published" ? body.published_at ?? new Date().toISOString() : null;
 
-  const { data, error } = await supa
-    .from("posts")
-    .insert({
-      slug,
-      locale,
-      title,
-      excerpt: body.excerpt ?? null,
-      body: markdown,
-      tags,
-      status,
-      date,
-      word_count: stats.wordCount,
-      reading_minutes: stats.readingMinutes,
-      published_at: publishedAt,
-    })
-    .select()
-    .single();
+  try {
+    const [inserted] = await db
+      .insert(schema.posts)
+      .values({
+        slug,
+        locale: locale as "en" | "vi",
+        title,
+        excerpt: body.excerpt ?? null,
+        body: markdown,
+        tags,
+        status: status as "draft" | "published" | "archived",
+        date: new Date(date),
+        wordCount: stats.wordCount,
+        readingMinutes: stats.readingMinutes,
+        publishedAt: publishedAt ? new Date(publishedAt) : null,
+      })
+      .returning();
 
-  if (error) {
-    const code = error.code === "23505" ? 409 : 500;
-    return NextResponse.json({ error: error.message, code: error.code }, { status: code });
+    return NextResponse.json({ post: inserted }, { status: 201 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "insert_failed";
+    const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
+    return NextResponse.json({ error: message }, { status: code });
   }
-
-  return NextResponse.json({ post: data }, { status: 201 });
 }

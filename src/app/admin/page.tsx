@@ -1,43 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import AdminShell from "@/components/admin/admin-shell";
-import { verifySessionCookie } from "@/lib/admin-auth";
-import { getSupabaseAdmin } from "@/lib/supabase";
+import AdminShell from "@/features/admin/components/admin-shell";
+import { verifySessionCookie } from "@/features/admin/lib/auth";
+import { listAllPostsForAdmin } from "@/features/blog/lib/posts-db";
+import { isDbConfigured } from "@/lib/db";
 
-type AdminPostRow = {
-  id: string;
-  slug: string;
-  locale: "en" | "vi";
-  title: string;
-  status: "draft" | "published" | "archived";
-  tags: string[];
-  updated_at: string;
-  published_at: string | null;
-  date: string | null;
-  reading_minutes: number | null;
-};
-
-async function fetchAllForAdmin(): Promise<{
-  rows: AdminPostRow[];
-  configured: boolean;
-  error?: string;
-}> {
-  const supa = getSupabaseAdmin();
-  if (!supa) return { rows: [], configured: false };
-  const { data, error } = await supa
-    .from("posts")
-    .select(
-      "id, slug, locale, title, status, tags, updated_at, published_at, date, reading_minutes",
-    )
-    .order("updated_at", { ascending: false });
-  if (error) return { rows: [], configured: true, error: error.message };
-  return { rows: (data as AdminPostRow[]) ?? [], configured: true };
-}
-
-function fmt(iso: string | null): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
+function fmt(date: Date | string | null): string {
+  if (!date) return "—";
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -49,7 +20,8 @@ export default async function AdminIndex() {
   const session = await verifySessionCookie();
   if (!session) redirect("/admin/login");
 
-  const { rows, configured, error } = await fetchAllForAdmin();
+  const configured = isDbConfigured();
+  const rows = configured ? await listAllPostsForAdmin() : [];
 
   return (
     <AdminShell>
@@ -66,32 +38,18 @@ export default async function AdminIndex() {
       {!configured && (
         <div className="mt-8 rounded-md border border-[var(--line)] border-l-[3px] border-l-ember bg-ember-soft px-5 py-4">
           <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-ember-deep">
-            Supabase not configured
+            Database not configured
           </div>
           <p className="mt-2 text-[14px] text-ink">
             Set{" "}
             <code className="rounded bg-paper-pure px-1.5 py-0.5 font-mono text-[12px]">
-              NEXT_PUBLIC_SUPABASE_URL
-            </code>
-            ,{" "}
-            <code className="rounded bg-paper-pure px-1.5 py-0.5 font-mono text-[12px]">
-              NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-            </code>
-            , and{" "}
-            <code className="rounded bg-paper-pure px-1.5 py-0.5 font-mono text-[12px]">
-              SUPABASE_SECRET_KEY
+              DATABASE_URL
             </code>{" "}
-            in <code>.env.local</code>, then run the migration in{" "}
-            <code>supabase/migrations/0001_posts.sql</code>. The site keeps
-            using MDX files until then.
+            (Supabase Project Settings → Database → Transaction Pooler URI) in{" "}
+            <code>.env.local</code>. The site keeps reading from Supabase REST or MDX
+            files until then.
           </p>
         </div>
-      )}
-
-      {error && (
-        <p className="mt-6 font-mono text-[12px] text-[#C24A1F]">
-          Error: {error}
-        </p>
       )}
 
       {configured && (
@@ -153,10 +111,10 @@ export default async function AdminIndex() {
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono text-[12px] text-ink-faint">
-                    {fmt(p.updated_at)}
+                    {fmt(p.updatedAt)}
                   </td>
                   <td className="px-4 py-3 text-right font-mono text-[12px] text-ink-faint">
-                    {p.reading_minutes ?? "—"}
+                    {p.readingMinutes ?? "—"}
                   </td>
                 </tr>
               ))}

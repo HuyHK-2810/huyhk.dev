@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getAllPostsAsync } from "@/lib/posts-db";
-import Section, { SectionHeader } from "./section";
+import { getAllPostsAsync } from "@/features/blog/lib/posts-db";
+import Section, { SectionHeader } from "@/components/brand/section";
 
 function formatDate(iso: string): string {
   if (!iso) return "";

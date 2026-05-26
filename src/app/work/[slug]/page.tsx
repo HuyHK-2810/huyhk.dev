@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Nav from "@/components/brand/nav";
 import Footer from "@/components/brand/footer";
-import { caseStudies, getCaseStudy } from "@/lib/work";
+import { caseStudies, getCaseStudy } from "@/features/work/lib/work";
 
 type Params = { slug: string };
 

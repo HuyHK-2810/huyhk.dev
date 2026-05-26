@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Locale, PostMeta } from "@/lib/posts";
+import type { Locale, PostMeta } from "@/features/blog/lib/posts";
 
 type Props = {
   prev: PostMeta | null;

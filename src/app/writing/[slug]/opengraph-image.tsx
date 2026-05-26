@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getAllSlugsAsync, getPostAsync } from "@/lib/posts-db";
+import { getAllSlugsAsync, getPostAsync } from "@/features/blog/lib/posts-db";
 
 export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
