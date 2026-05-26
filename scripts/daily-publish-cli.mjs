@@ -119,7 +119,8 @@ Output ONLY a JSON object matching the response schema — no prose, no markdown
 Reminder of the bar:
 - Title: 6–12 words, declarative, has tension. NOT a listicle.
 - Excerpt: 1–2 sentences, ≤ 200 chars, promises a payoff.
-- Body: 800–1500 words. 3–6 H2 sections. ≥ 1 concrete anecdote tied to the biography. ≥ 1 italicized lesson.
+- **Body MUST contain at least 3 H2 sections using \`## Heading\` markdown syntax** at the start of a line. Use H3 (\`### \`) only inside an H2 with 2+ sub-beats. Do NOT use H1 — the title is rendered separately. Do NOT use bold-only pseudo-headings (\`**Section name**\` on its own line) — they don't render as TOC entries.
+- Body length: 800–1500 words. ≥ 1 concrete anecdote tied to the biography. ≥ 1 italicized lesson (single asterisks: \`*lesson here*\`).
 - Tags: 2–5 from §5 taxonomy only.
 - NO listicles, NO "as developers we", NO "in today's fast-paced world", NO corporate verbs.`;
 }

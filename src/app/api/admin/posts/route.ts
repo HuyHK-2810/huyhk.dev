@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { getDb, schema, isDbConfigured } from "@/lib/db";
+import { getDb, schema } from "@/lib/db";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
 import { computeReadingStats } from "@/features/blog/lib/markdown";
 import {
@@ -116,12 +117,14 @@ export async function GET(req: Request) {
   }
 
   // Project columns down to the requested fields, preserving the snake_case
-  // names the API uses (callers asked for those names, return them as-is).
+  // names the API uses. Drizzle returns camelCase keys; Supabase REST fallback
+  // returns snake_case — try camelCase first, fall back to snake_case.
   const projected = rows.map((row) => {
     const out: Record<string, unknown> = {};
+    const r = row as unknown as Record<string, unknown>;
     for (const apiField of projection!) {
       const dbField = FIELD_MAP[apiField];
-      out[apiField] = row[dbField];
+      out[apiField] = r[dbField] ?? r[apiField];
     }
     return out;
   });
@@ -132,13 +135,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-  if (!isDbConfigured()) {
-    return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
-  }
-  const db = getDb();
-  if (!db) {
-    return NextResponse.json({ error: "db_unavailable" }, { status: 503 });
   }
 
   let body: CreateBody;
@@ -173,29 +169,61 @@ export async function POST(req: Request) {
   const publishedAt =
     status === "published" ? body.published_at ?? new Date().toISOString() : null;
 
-  try {
-    const [inserted] = await db
-      .insert(schema.posts)
-      .values({
-        slug,
-        locale: locale as "en" | "vi",
-        title,
-        excerpt: body.excerpt ?? null,
-        body: markdown,
-        tags,
-        status: status as "draft" | "published" | "archived",
-        date: new Date(date),
-        wordCount: stats.wordCount,
-        readingMinutes: stats.readingMinutes,
-        publishedAt: publishedAt ? new Date(publishedAt) : null,
-      })
-      .returning();
-
-    revalidateTag(POSTS_CACHE_TAG);
-    return NextResponse.json({ post: inserted }, { status: 201 });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "insert_failed";
-    const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
-    return NextResponse.json({ error: message }, { status: code });
+  // Drizzle path
+  const db = getDb();
+  if (db) {
+    try {
+      const [inserted] = await db
+        .insert(schema.posts)
+        .values({
+          slug,
+          locale: locale as "en" | "vi",
+          title,
+          excerpt: body.excerpt ?? null,
+          body: markdown,
+          tags,
+          status: status as "draft" | "published" | "archived",
+          date: new Date(date),
+          wordCount: stats.wordCount,
+          readingMinutes: stats.readingMinutes,
+          publishedAt: publishedAt ? new Date(publishedAt) : null,
+        })
+        .returning();
+      revalidateTag(POSTS_CACHE_TAG);
+      return NextResponse.json({ post: inserted }, { status: 201 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "insert_failed";
+      const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
+      return NextResponse.json({ error: message }, { status: code });
+    }
   }
+
+  // Supabase REST fallback (admin/service-role).
+  const supa = getSupabaseAdmin();
+  if (!supa) {
+    return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+  }
+  const { data, error } = await supa
+    .from("posts")
+    .insert({
+      slug,
+      locale,
+      title,
+      excerpt: body.excerpt ?? null,
+      body: markdown,
+      tags,
+      status,
+      date,
+      word_count: stats.wordCount,
+      reading_minutes: stats.readingMinutes,
+      published_at: publishedAt,
+    })
+    .select()
+    .single();
+  if (error) {
+    const code = error.code === "23505" ? 409 : 500;
+    return NextResponse.json({ error: error.message }, { status: code });
+  }
+  revalidateTag(POSTS_CACHE_TAG);
+  return NextResponse.json({ post: data }, { status: 201 });
 }

@@ -2,9 +2,13 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
 import { computeReadingStats } from "@/features/blog/lib/markdown";
-import { POSTS_CACHE_TAG } from "@/features/blog/lib/posts-db";
+import {
+  POSTS_CACHE_TAG,
+  getPostByIdForAdmin,
+} from "@/features/blog/lib/posts-db";
 
 export const runtime = "nodejs";
 
@@ -25,11 +29,8 @@ export async function GET(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const db = getDb();
-  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
-
   const { id } = await params;
-  const [row] = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
+  const row = await getPostByIdForAdmin(id);
   if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
   return NextResponse.json({ post: row });
 }
@@ -41,9 +42,6 @@ export async function PATCH(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const db = getDb();
-  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
-
   const { id } = await params;
 
   let body: Record<string, unknown>;
@@ -53,6 +51,7 @@ export async function PATCH(
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
+  // Build the update payload in Drizzle camelCase shape first.
   const update: Partial<typeof schema.posts.$inferInsert> = {};
 
   if (typeof body.title === "string") update.title = body.title.trim();
@@ -94,20 +93,50 @@ export async function PATCH(
     return NextResponse.json({ error: "nothing_to_update" }, { status: 400 });
   }
 
-  try {
-    const [row] = await db
-      .update(schema.posts)
-      .set(update)
-      .where(eq(schema.posts.id, id))
-      .returning();
-    if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
-    revalidateTag(POSTS_CACHE_TAG);
-    return NextResponse.json({ post: row });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "update_failed";
-    const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
-    return NextResponse.json({ error: message }, { status: code });
+  // Drizzle path
+  const db = getDb();
+  if (db) {
+    try {
+      const [row] = await db
+        .update(schema.posts)
+        .set(update)
+        .where(eq(schema.posts.id, id))
+        .returning();
+      if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
+      revalidateTag(POSTS_CACHE_TAG);
+      return NextResponse.json({ post: row });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "update_failed";
+      const code = message.includes("duplicate") || message.includes("23505") ? 409 : 500;
+      return NextResponse.json({ error: message }, { status: code });
+    }
   }
+
+  // Supabase REST fallback (admin/service-role to bypass RLS).
+  const supa = getSupabaseAdmin();
+  if (!supa) {
+    return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+  }
+  // Translate camelCase → snake_case for Supabase REST.
+  const supaUpdate: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(update)) {
+    const key = k
+      .replace(/([A-Z])/g, "_$1")
+      .toLowerCase();
+    supaUpdate[key] = v instanceof Date ? v.toISOString() : v;
+  }
+  const { data, error } = await supa
+    .from("posts")
+    .update(supaUpdate)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) {
+    const status = error.code === "23505" ? 409 : 500;
+    return NextResponse.json({ error: error.message }, { status });
+  }
+  revalidateTag(POSTS_CACHE_TAG);
+  return NextResponse.json({ post: data });
 }
 
 export async function DELETE(
@@ -117,11 +146,21 @@ export async function DELETE(
   if (!(await authorize(req))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const db = getDb();
-  if (!db) return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
-
   const { id } = await params;
-  await db.delete(schema.posts).where(eq(schema.posts.id, id));
+
+  const db = getDb();
+  if (db) {
+    await db.delete(schema.posts).where(eq(schema.posts.id, id));
+    revalidateTag(POSTS_CACHE_TAG);
+    return NextResponse.json({ ok: true });
+  }
+
+  const supa = getSupabaseAdmin();
+  if (!supa) {
+    return NextResponse.json({ error: "db_not_configured" }, { status: 503 });
+  }
+  const { error } = await supa.from("posts").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   revalidateTag(POSTS_CACHE_TAG);
   return NextResponse.json({ ok: true });
 }

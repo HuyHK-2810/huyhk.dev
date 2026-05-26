@@ -1,7 +1,11 @@
 import { unstable_cache } from "next/cache";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
-import { getSupabaseRead, isSupabaseConfigured } from "@/lib/supabase";
+import {
+  getSupabaseAdmin,
+  getSupabaseRead,
+  isSupabaseConfigured,
+} from "@/lib/supabase";
 import { computeReadingStats } from "./markdown";
 
 /** Cache tags used to invalidate the unstable_cache layer below. */
@@ -212,20 +216,41 @@ export async function getAdjacentAsync(
   };
 }
 
-/** Admin: list all posts (drafts included), Drizzle preferred. */
+/** Normalize Supabase REST snake_case → Drizzle camelCase. */
+function normalizeSupabaseRow(r: Record<string, unknown>): schema.Post {
+  return {
+    id: r.id as string,
+    slug: r.slug as string,
+    locale: r.locale as "en" | "vi",
+    title: r.title as string,
+    excerpt: (r.excerpt ?? null) as string | null,
+    body: r.body as string,
+    tags: (r.tags ?? []) as string[],
+    status: r.status as "draft" | "published" | "archived",
+    date: r.date ? new Date(r.date as string) : null,
+    wordCount: (r.word_count ?? null) as number | null,
+    readingMinutes: (r.reading_minutes ?? null) as number | null,
+    createdAt: new Date(r.created_at as string),
+    updatedAt: new Date(r.updated_at as string),
+    publishedAt: r.published_at ? new Date(r.published_at as string) : null,
+  };
+}
+
+/** Admin: list all posts (drafts included), Drizzle preferred, Supabase admin REST fallback. */
 export async function listAllPostsForAdmin(opts?: {
   status?: "draft" | "published" | "archived";
   locale?: Locale;
 }): Promise<schema.Post[]> {
   const db = getDb();
   if (!db) {
-    const supa = getSupabaseRead();
+    // Use ADMIN (service-role) client so drafts are visible — RLS bypassed.
+    const supa = getSupabaseAdmin() ?? getSupabaseRead();
     if (!supa) return [];
     let q = supa.from("posts").select("*").order("updated_at", { ascending: false });
     if (opts?.status) q = q.eq("status", opts.status);
     if (opts?.locale) q = q.eq("locale", opts.locale);
     const { data } = await q;
-    return ((data ?? []) as unknown) as schema.Post[];
+    return ((data ?? []) as Record<string, unknown>[]).map(normalizeSupabaseRow);
   }
   const conditions = [
     opts?.status ? eq(schema.posts.status, opts.status) : undefined,
@@ -236,4 +261,18 @@ export async function listAllPostsForAdmin(opts?: {
     .from(schema.posts)
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(desc(schema.posts.updatedAt));
+}
+
+/** Admin: fetch one post by id, Drizzle preferred, Supabase admin REST fallback. */
+export async function getPostByIdForAdmin(id: string): Promise<schema.Post | null> {
+  const db = getDb();
+  if (!db) {
+    const supa = getSupabaseAdmin() ?? getSupabaseRead();
+    if (!supa) return null;
+    const { data, error } = await supa.from("posts").select("*").eq("id", id).single();
+    if (error || !data) return null;
+    return normalizeSupabaseRow(data as Record<string, unknown>);
+  }
+  const [row] = await db.select().from(schema.posts).where(eq(schema.posts.id, id));
+  return row ?? null;
 }
