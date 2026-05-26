@@ -12,9 +12,7 @@ const links = [
   { href: "/cv", label: "CV" },
 ];
 
-type Profile = { display_name: string | null; role: string } | null;
-
-export default function NavClient({ profile }: { profile: Profile }) {
+export default function NavClient({ hasSession }: { hasSession: boolean }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -26,9 +24,7 @@ export default function NavClient({ profile }: { profile: Profile }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const accountLabel = profile?.display_name
-    ? profile.display_name.split(" ")[0]
-    : "Account";
+  const accountLabel = "Account";
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--line-soft)] bg-[color-mix(in_srgb,var(--paper)_85%,transparent)] backdrop-blur-md">
@@ -52,7 +48,7 @@ export default function NavClient({ profile }: { profile: Profile }) {
               </Link>
             </li>
           ))}
-          {profile ? (
+          {hasSession ? (
             <li>
               <Link
                 href="/account"
@@ -124,7 +120,7 @@ export default function NavClient({ profile }: { profile: Profile }) {
               </li>
             ))}
             <li className="mt-2 border-t border-[var(--line-soft)] pt-2">
-              {profile ? (
+              {hasSession ? (
                 <Link
                   href="/account"
                   onClick={() => setOpen(false)}

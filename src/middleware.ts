@@ -8,15 +8,19 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Skip:
-     *   - Next internals (_next/static, _next/image)
-     *   - Static files (images, fonts, etc.)
-     *   - Feed/sitemap/OG endpoints (no user-aware UI; revalidated separately)
-     *   - api/subscribe (public endpoint, no session needed)
+     * Run middleware ONLY on auth-touched routes. Public pages (/, /writing/*,
+     * /work/*, /cv, /pricing/*) skip middleware entirely — saves ~100-200ms
+     * per request (no Supabase auth.getUser() round-trip).
      *
-     * The remaining routes (pages + auth/admin API) still get session refresh
-     * so signed-in users see name in nav and admin routes can gate.
+     * Public-page nav cookie-sniffs the session presence locally (see
+     * src/components/brand/nav.tsx) for display, then any privileged route
+     * validates server-side here.
      */
-    "/((?!_next/static|_next/image|favicon.ico|feed.xml|sitemap.xml|opengraph-image|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|woff2|woff|ttf|otf|map)$|api/subscribe).*)",
+    "/admin/:path*",
+    "/account/:path*",
+    "/sign-in",
+    "/sign-up",
+    "/auth/:path*",
+    "/api/admin/:path*",
   ],
 };
