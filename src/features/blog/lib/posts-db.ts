@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { getSupabaseRead, isSupabaseConfigured } from "@/lib/supabase";
@@ -10,6 +11,10 @@ import {
   getAllTags as getFileTags,
 } from "./posts";
 import { computeReadingStats } from "./markdown";
+
+/** Cache tags used to invalidate the unstable_cache layer below. */
+export const POSTS_CACHE_TAG = "posts";
+export const POSTS_CACHE_REVALIDATE_SECONDS = 60;
 
 export type DBPostRow = {
   id: string;
@@ -70,7 +75,7 @@ function rowToMeta(row: DBPostRow, availableLocales: Locale[]): DBPost {
  * Supabase REST as fallback. Empty array on any error → caller falls back
  * to MDX files.
  */
-async function fetchAllPublishedRows(): Promise<DBPostRow[]> {
+async function fetchAllPublishedRowsUncached(): Promise<DBPostRow[]> {
   const db = getDb();
   if (db) {
     try {
@@ -104,6 +109,18 @@ async function fetchAllPublishedRows(): Promise<DBPostRow[]> {
   }
   return (data as DBPostRow[]) ?? [];
 }
+
+/**
+ * Cached for 60s + tagged `posts`. Admin mutations call
+ * `revalidateTag('posts')` to invalidate. The cache lives across requests on
+ * the same server instance, so a hot page costs zero DB roundtrips after the
+ * first hit.
+ */
+const fetchAllPublishedRows = unstable_cache(
+  fetchAllPublishedRowsUncached,
+  ["posts:all-published"],
+  { revalidate: POSTS_CACHE_REVALIDATE_SECONDS, tags: [POSTS_CACHE_TAG] },
+);
 
 function filePostsToDbShape(locale: Locale): DBPost[] {
   return getFilePosts(locale).map((p) => ({ ...p, id: p.slug, body: "" }));

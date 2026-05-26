@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getDb, schema, isDbConfigured } from "@/lib/db";
 import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
 import { computeReadingStats } from "@/features/blog/lib/markdown";
-import { listAllPostsForAdmin } from "@/features/blog/lib/posts-db";
+import {
+  listAllPostsForAdmin,
+  POSTS_CACHE_TAG,
+} from "@/features/blog/lib/posts-db";
 
 export const runtime = "nodejs";
 
@@ -122,6 +126,7 @@ export async function POST(req: Request) {
       })
       .returning();
 
+    revalidateTag(POSTS_CACHE_TAG);
     return NextResponse.json({ post: inserted }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "insert_failed";

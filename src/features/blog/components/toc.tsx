@@ -42,7 +42,7 @@ export default function TableOfContents({ headings }: Props) {
   return (
     <nav
       aria-label="On this page"
-      className="sticky top-[88px] self-start max-h-[calc(100vh-110px)] overflow-y-auto pr-1"
+      className="fixed top-[140px] self-start max-h-[calc(100vh-110px)] overflow-y-auto pr-1"
     >
       <div className="font-mono text-[11px] uppercase tracking-[0.08em] text-ink-faint">
         on this page

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { verifyBearer, verifySessionCookie } from "@/features/admin/lib/auth";
 import { computeReadingStats } from "@/features/blog/lib/markdown";
+import { POSTS_CACHE_TAG } from "@/features/blog/lib/posts-db";
 
 export const runtime = "nodejs";
 
@@ -99,6 +101,7 @@ export async function PATCH(
       .where(eq(schema.posts.id, id))
       .returning();
     if (!row) return NextResponse.json({ error: "not_found" }, { status: 404 });
+    revalidateTag(POSTS_CACHE_TAG);
     return NextResponse.json({ post: row });
   } catch (err) {
     const message = err instanceof Error ? err.message : "update_failed";
@@ -119,5 +122,6 @@ export async function DELETE(
 
   const { id } = await params;
   await db.delete(schema.posts).where(eq(schema.posts.id, id));
+  revalidateTag(POSTS_CACHE_TAG);
   return NextResponse.json({ ok: true });
 }

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 
@@ -37,15 +38,18 @@ export async function createSupabaseServerClient() {
   );
 }
 
-/** Returns the current authenticated user, verified against Supabase Auth. */
-export async function getCurrentUser() {
+/**
+ * Per-request memoized. React's cache() dedupes within a single render tree —
+ * Nav + page body + middleware all share one auth.getUser() call instead of
+ * each issuing a network roundtrip to Supabase.
+ */
+export const getCurrentUser = cache(async () => {
   const supa = await createSupabaseServerClient();
   const { data } = await supa.auth.getUser();
   return data.user ?? null;
-}
+});
 
-/** Returns the current user's profile row (with role) or null. */
-export async function getCurrentProfile() {
+export const getCurrentProfile = cache(async () => {
   const supa = await createSupabaseServerClient();
   const { data: userData } = await supa.auth.getUser();
   if (!userData.user) return null;
@@ -57,4 +61,4 @@ export async function getCurrentProfile() {
   return (data ?? null) as
     | { id: string; email: string; display_name: string | null; role: "customer" | "author" | "admin" }
     | null;
-}
+});
