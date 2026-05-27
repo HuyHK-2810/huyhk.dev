@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema";
+import * as postsSchema from "./schema";
+import * as marketSchema from "./market";
 
 /**
  * Server-only Drizzle client.
@@ -16,16 +17,16 @@ import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
 
+// Combined schema: posts + market. Drizzle uses this for relations + types.
+const schema = { ...postsSchema, ...marketSchema };
+
 let _client: ReturnType<typeof drizzle<typeof schema>> | null = null;
 
 export function getDb() {
   if (!connectionString) return null;
   if (!_client) {
     const sql = postgres(connectionString, {
-      // Disable prepare in serverless (pooler doesn't keep prepared statements
-      // across invocations).
       prepare: false,
-      // Single connection per function instance is fine for Vercel.
       max: 1,
     });
     _client = drizzle(sql, { schema });
@@ -38,3 +39,4 @@ export function isDbConfigured(): boolean {
 }
 
 export { schema };
+export { marketSchema };

@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { and, desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
+import type { Post } from "@/lib/db/schema";
 import {
   getSupabaseAdmin,
   getSupabaseRead,
@@ -45,7 +46,7 @@ export type DBPostRow = {
 
 export type DBPost = PostMeta & { body: string; id: string };
 
-function dbRowFromDrizzle(row: schema.Post): DBPostRow {
+function dbRowFromDrizzle(row: Post): DBPostRow {
   return {
     id: row.id,
     slug: row.slug,
@@ -217,7 +218,7 @@ export async function getAdjacentAsync(
 }
 
 /** Normalize Supabase REST snake_case → Drizzle camelCase. */
-function normalizeSupabaseRow(r: Record<string, unknown>): schema.Post {
+function normalizeSupabaseRow(r: Record<string, unknown>): Post {
   return {
     id: r.id as string,
     slug: r.slug as string,
@@ -240,7 +241,7 @@ function normalizeSupabaseRow(r: Record<string, unknown>): schema.Post {
 export async function listAllPostsForAdmin(opts?: {
   status?: "draft" | "published" | "archived";
   locale?: Locale;
-}): Promise<schema.Post[]> {
+}): Promise<Post[]> {
   const db = getDb();
   if (!db) {
     // Use ADMIN (service-role) client so drafts are visible — RLS bypassed.
@@ -264,7 +265,7 @@ export async function listAllPostsForAdmin(opts?: {
 }
 
 /** Admin: fetch one post by id, Drizzle preferred, Supabase admin REST fallback. */
-export async function getPostByIdForAdmin(id: string): Promise<schema.Post | null> {
+export async function getPostByIdForAdmin(id: string): Promise<Post | null> {
   const db = getDb();
   if (!db) {
     const supa = getSupabaseAdmin() ?? getSupabaseRead();

@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 import { getAllPostsAsync, getAllTagsAsync } from "@/features/blog/lib/posts-db";
 import { caseStudies } from "@/features/work/lib/work";
+import {
+  getActiveCategories,
+  getPublishedProducts,
+} from "@/features/market/lib/queries";
 
 const BASE = "https://huyhk.dev";
 
@@ -12,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/writing`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/writing?lang=vi`, lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE}/work`, lastModified: now, changeFrequency: "monthly", priority: 0.85 },
+    { url: `${BASE}/market`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: `${BASE}/cv`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/pricing/xnkminhphuc`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
@@ -56,5 +61,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...staticRoutes, ...postRoutes, ...tagRoutes];
+  // Market: categories + products
+  const [marketCategories, marketProducts] = await Promise.all([
+    getActiveCategories(),
+    getPublishedProducts(),
+  ]);
+  const marketRoutes: MetadataRoute.Sitemap = [
+    ...marketCategories.map((c) => ({
+      url: `${BASE}/market/${c.slug}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+    ...marketProducts.map((p) => {
+      const cat = marketCategories.find((c) => c.id === p.categoryId);
+      return {
+        url: `${BASE}/market/${cat?.slug ?? "products"}/${p.slug}`,
+        lastModified: p.publishedAt ?? now,
+        changeFrequency: "weekly" as const,
+        priority: 0.75,
+      };
+    }),
+  ];
+
+  return [...staticRoutes, ...postRoutes, ...tagRoutes, ...marketRoutes];
 }

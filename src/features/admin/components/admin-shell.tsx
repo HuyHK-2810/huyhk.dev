@@ -15,7 +15,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   const navLinks = [
     { href: "/admin", label: "Posts" },
-    { href: "/admin/new", label: "New" },
+    { href: "/admin/market", label: "Products" },
+    { href: "/admin/market/orders", label: "Orders" },
+    { href: "/admin/market/coupons", label: "Coupons" },
+    { href: "/admin/market/reviews", label: "Reviews" },
   ];
 
   return (
