@@ -80,20 +80,24 @@ async function listExistingPosts() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Locale picker
+// Locale strategy
+//   --locale=en     → only EN
+//   --locale=vi     → only VI
+//   --locale=both   → bilingual (default; EN first, then VI translation)
+//   (omitted)       → "both"
 // ─────────────────────────────────────────────────────────────────────────────
 
-function pickLocale() {
-  if (localeArg === "en" || localeArg === "vi") return localeArg;
-  const day = Math.floor(Date.now() / 86_400_000);
-  return day % 2 === 0 ? "en" : "vi";
+function localesToGenerate() {
+  if (localeArg === "en") return ["en"];
+  if (localeArg === "vi") return ["vi"];
+  return ["en", "vi"];           // bilingual default
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Prompt (user message)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function buildUserPrompt(locale, existing) {
+function buildOriginalPrompt(locale, existing) {
   const inLocale = existing.filter((p) => p.locale === locale);
   const lines = inLocale.map(
     (p) => `- ${p.slug}: "${p.title}" (tags: ${p.tags.join(", ")})`,
@@ -123,6 +127,39 @@ Reminder of the bar:
 - Body length: 800–1500 words. ≥ 1 concrete anecdote tied to the biography. ≥ 1 italicized lesson (single asterisks: \`*lesson here*\`).
 - Tags: 2–5 from §5 taxonomy only.
 - NO listicles, NO "as developers we", NO "in today's fast-paced world", NO corporate verbs.`;
+}
+
+/**
+ * Bilingual translation prompt: given an EN draft, produce its VI counterpart.
+ * Keeps slug + tags identical, preserves the central thesis and anecdotes,
+ * but writes in native Vietnamese rather than transliterating.
+ */
+function buildTranslationPrompt(source, targetLocale) {
+  return `Translate the blog post below from ${source.locale.toUpperCase()} to ${targetLocale.toUpperCase()} for the same blog (huyhk.dev), keeping it native — DO NOT transliterate.
+
+Constraints:
+1. Keep the SAME slug exactly: ${source.slug}
+2. Keep the SAME tags exactly: ${JSON.stringify(source.tags)}
+3. locale must be "${targetLocale}"
+4. Preserve the central thesis, all anecdotes, the year/place references from §0 of the system prompt.
+5. Preserve the H2 section structure (same number of sections, same beats — translate the headings).
+6. Preserve any callouts (\`> **Label**\\n>\\n> body\`), \`*italicized lessons*\`, and code blocks verbatim where they contain code; translate prose inside callouts.
+7. Title must feel native ${targetLocale === "vi" ? "Vietnamese (not awkward translation)" : "English"} — 6–12 words, declarative, has tension.
+8. Excerpt: 1–2 sentences, ≤ 200 chars, native in the target language.
+9. Length: 800–1500 words after translation.
+10. Voice should match the system prompt's voice rules — first-person, observed, no listicles, no "as developers we", no SEO-bait.
+
+For ${targetLocale === "vi" ? "Vietnamese: use Huy's natural cadence — short sentences, em-dash asides. Tech terms (React, Next.js, OAuth, queue, middleware) stay in English. Use 'tôi' not 'mình'. Use 'kiểm thử' or keep 'tester' depending on which feels natural in context — match the flagship vi posts (tester-dna.vi, oauth-sso-warning.vi)." : "English: match Huy's voice in the flagship en posts."}
+
+SOURCE POST (locale=${source.locale}):
+\`\`\`md
+TITLE: ${source.title}
+EXCERPT: ${source.excerpt}
+
+${source.body}
+\`\`\`
+
+Output ONLY a JSON object matching the response schema. No prose, no markdown wrapper.`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -251,48 +288,22 @@ async function postDraft(post) {
 // Main
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function main() {
-  console.error(`[1/4] Fetching existing posts from ${SITE} …`);
-  const existing = await listExistingPosts();
-
-  const locale = pickLocale();
-  console.error(
-    `[2/4] Locale=${locale}. Existing posts in this locale: ${existing.filter((p) => p.locale === locale).length}.`,
-  );
-
-  console.error(
-    `[3/4] Invoking \`claude\` CLI (no API key — uses your Claude Code subscription). This typically runs 30–120s.`,
-  );
-  const userPrompt = buildUserPrompt(locale, existing);
-  const envelope = await runClaude(userPrompt);
-
-  // Envelope shape (Claude Code --output-format json):
-  //   {
-  //     type: "result", subtype: "success", is_error: false,
-  //     result: "",                       // empty when --json-schema is set
-  //     structured_output: { ...schema }, // the actual schema-conforming object
-  //     duration_ms, total_cost_usd, session_id, usage, ...
-  //   }
+/** Parse a claude envelope (with --json-schema). Throws on bad shape. */
+function extractDraft(envelope) {
   let draft = envelope.structured_output;
   if (!draft) {
-    // Fallback: some versions may put JSON-string in `result` instead.
     if (typeof envelope.result === "string" && envelope.result.trim().startsWith("{")) {
-      try {
-        draft = JSON.parse(envelope.result);
-      } catch (err) {
-        throw new Error(
-          `Failed to parse claude result as JSON: ${err.message}\n${envelope.result.slice(0, 500)}…`,
-        );
-      }
+      draft = JSON.parse(envelope.result);
     } else {
       throw new Error(
-        `Missing structured_output in envelope. is_error=${envelope.is_error}, stop_reason=${envelope.stop_reason}, result="${(envelope.result ?? "").slice(0, 200)}"`,
+        `Missing structured_output. is_error=${envelope.is_error}, stop=${envelope.stop_reason}, result="${(envelope.result ?? "").slice(0, 200)}"`,
       );
     }
   }
+  return draft;
+}
 
-  // Telemetry — Claude Code envelope may or may not include cost depending on
-  // OAuth vs API key auth path.
+function logEnvelope(label, envelope) {
   const meta = [
     envelope.duration_ms ? `duration=${envelope.duration_ms}ms` : null,
     envelope.num_turns ? `turns=${envelope.num_turns}` : null,
@@ -302,25 +313,57 @@ async function main() {
   ]
     .filter(Boolean)
     .join(", ");
-  console.error(`[claude] ${meta}`);
+  console.error(`[claude:${label}] ${meta}`);
+}
 
-  console.error(`[4/4] Validating draft against editorial rules…`);
+function validateOrAbort(draft, label) {
   const problems = validate(draft);
   if (problems.length > 0) {
-    console.error("Validation issues:");
+    console.error(`[${label}] validation issues:`);
     for (const p of problems) console.error("  ×", p);
     if (!dryRun) {
-      console.error(
-        "Refusing to POST. Re-run with --dry-run to inspect, or tune the rule book.",
-      );
+      console.error("Refusing to POST. Re-run with --dry-run to inspect.");
       process.exit(2);
     }
     console.error("(Continuing in --dry-run mode despite validation issues.)");
   } else {
-    console.error("  ✓ All editorial checks pass.");
+    console.error(`[${label}] ✓ all editorial checks pass`);
   }
+}
 
-  await postDraft(draft);
+async function main() {
+  console.error(`[1/_] Fetching existing posts from ${SITE} …`);
+  const existing = await listExistingPosts();
+  const locales = localesToGenerate();
+  console.error(
+    `[2/_] Will generate locale${locales.length > 1 ? "s" : ""}: ${locales.join(" + ")}`,
+  );
+
+  // Step 1 — original (always EN if generating both; otherwise the requested locale).
+  const originalLocale = locales.includes("en") ? "en" : locales[0];
+  console.error(`[3/_] Generating original (locale=${originalLocale}) …`);
+  const originalEnvelope = await runClaude(buildOriginalPrompt(originalLocale, existing));
+  const originalDraft = extractDraft(originalEnvelope);
+  logEnvelope(originalLocale, originalEnvelope);
+  validateOrAbort(originalDraft, originalLocale);
+  await postDraft(originalDraft);
+
+  // Step 2 — translate into each remaining locale, sharing slug + tags.
+  for (const target of locales) {
+    if (target === originalLocale) continue;
+    console.error(`[4/_] Translating into ${target} (slug ${originalDraft.slug}) …`);
+    const translationEnvelope = await runClaude(
+      buildTranslationPrompt(originalDraft, target),
+    );
+    const translationDraft = extractDraft(translationEnvelope);
+    // Enforce slug + tags match — even if the model deviated.
+    translationDraft.slug = originalDraft.slug;
+    translationDraft.tags = originalDraft.tags;
+    translationDraft.locale = target;
+    logEnvelope(target, translationEnvelope);
+    validateOrAbort(translationDraft, target);
+    await postDraft(translationDraft);
+  }
 }
 
 main().catch((err) => {
